@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>版本验收报告 · 留学机构 AI 智能助手系统（ai-assistant）</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d8dee4;
+  --head:#f6f8fa; --accent:#0969da; --warn:#9a6700; --bad:#cf222e; --ok:#1a7f37;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:40px 24px 80px; background:var(--bg); color:var(--fg);
+  font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+}
+main{max-width:1180px;margin:0 auto}
+h1{font-size:27px;margin:0 0 6px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+h2{font-size:20px;margin:38px 0 12px;padding-left:10px;border-left:4px solid var(--accent)}
+h3{font-size:16px;margin:26px 0 10px;color:#24292f}
+h4{font-size:15px;margin:20px 0 8px}
+p{margin:10px 0}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+blockquote{
+  margin:14px 0;padding:10px 14px;background:#fff8e1;border-left:4px solid #d4a72c;
+  color:#5c4813;border-radius:0 6px 6px 0;
+}
+code{
+  background:var(--head);border:1px solid var(--line);border-radius:4px;
+  padding:1px 5px;font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;
+  color:#0550ae;overflow-wrap:break-word;word-break:normal;
+}
+table{
+  width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;
+  table-layout:auto;
+}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+tbody tr:nth-child(even){background:#fbfcfd}
+td:first-child{white-space:nowrap;width:1%}
+td:nth-child(2){min-width:160px}
+strong{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>版本验收报告 · 留学机构 AI 智能助手系统（ai-assistant）</h1>
+<ul><li><strong>验收对象</strong>：<code>ai-assistant</code>（留学机构 AI 智能助手系统）</li><li><strong>项目根</strong>：<code>C:\Users\机械革命\Desktop\留学机构AI助手系统_交付\02-源代码\ai-assistant\</code></li><li><strong>验收时间</strong>：2026-09-17 23:43 – 23:47</li><li><strong>验收方式</strong>：全量回归实测（pytest + 覆盖率 → 起服体检 → HTTP 冒烟 → 浏览器 E2E）+ 外部依赖探活 + 生产配置静态守卫 + 历史查验报告复核</li><li><strong>验收依据</strong>：SRS V1.0（需求规格）、TDD V1.0（技术方案）、客户需求表、<code>reports/需求完成情况查验报告.md</code>、<code>reports/代码实现与测试查验报告.md</code>、<code>reports/验收基线汇总.md</code></li></ul>
+<hr>
+<h2>一、验收结论</h2>
+<table>
+<thead><tr><th>维度</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td><strong>交付验收（演示 / 答辩 / 结题）</strong></td><td>✅ <strong>通过</strong> —— 功能面完整、工程化证据充分、全部结果可一键复现</td></tr>
+<tr><td><strong>生产上线（PROD 准出）</strong></td><td>🟡 <strong>有条件通过（当前不建议直接上线）</strong> —— 5 项准出门槛未达成，均属外部依赖与生产化非功能能力</td></tr>
+</tbody></table>
+<p><strong>结论依据</strong>：34 条功能需求判定为 ✅22 / 🟡5 / ⚪7 / 🔴0，无完全未实现项；四条自动化基线（单元 / 冒烟 / E2E / Dify 接线）本轮<strong>全绿且为当天最新实测</strong>；SRS 第七章 9 条验收标准中 1 条完全达成、4 条部分达成、4 条因缺少甲方样本集或真实通道<strong>不具备验证条件</strong>。</p>
+<blockquote><p>判定口径说明：🟡「有条件通过」不是质量问题，而是<strong>验证条件缺失</strong>——准确率类指标（AC-01/02）无甲方标注样本集、触达类指标（AC-07）无真实通道，</p></blockquote>
+<blockquote><p>这两类只能在甲方提供材料与账号后判定，代码侧无法自证。</p></blockquote>
+<hr>
+<h2>二、本次实测结果（2026-09-17 23:43–23:47 实跑）</h2>
+<table>
+<thead><tr><th>验证层</th><th>结果</th><th>耗时</th><th>证据文件</th></tr></thead>
+<tbody>
+<tr><td>单元 / 集成（pytest）</td><td>✅ <strong>533 / 533 通过</strong>，覆盖率 <strong>93%</strong></td><td>16.2s</td><td>命令行输出</td></tr>
+<tr><td>起服体检 + HTTP 冒烟 + 浏览器 E2E</td><td>✅ <strong>23 项分组全过</strong>（82.4s）</td><td>82.4s</td><td><code>reports/regression_report.md</code></td></tr>
+<tr><td>├ HTTP 冒烟（真实起服，live 模式）</td><td>✅ <strong>149 / 149</strong>，累计 28.1s</td><td>—</td><td><code>reports/smoke_report.md</code>（23:45:34 刷新）</td></tr>
+<tr><td>└ 浏览器 E2E（Edge 真实驱动）</td><td>✅ <strong>37 / 37</strong>，页面异常 0</td><td>—</td><td><code>reports/frontend_e2e_report.json</code>（23:46:48 刷新）+ <code>frontend_shots/</code></td></tr>
+<tr><td>Dify 接线探活</td><td>✅ <strong>7 / 7 [OK]</strong>（mode=live）</td><td>—</td><td><code>python scripts/check_dify.py</code></td></tr>
+<tr><td>生产配置守卫（静态）</td><td>✅ <strong>0 FAIL</strong>，2 WARN，7 PASS</td><td>—</td><td><code>python scripts/check_prod_config.py</code></td></tr>
+<tr><td>并发压测（mock，23:28 已跑）</td><td>✅ 20 并发 p95 27.1 ms / 0 个 5xx</td><td>—</td><td><code>reports/load_test_report.md</code></td></tr>
+</tbody></table>
+<p><strong>一键复现</strong>：</p>
+<p>```bash</p>
+<p>python scripts/regression.py          # 全量：pytest → 体检 → 冒烟 → E2E，约 100s</p>
+<p>python scripts/check_dify.py          # Dify 7 个应用探活</p>
+<p>python scripts/check_prod_config.py   # 生产配置守卫</p>
+<p>```</p>
+<p><strong>口径一致性复核</strong>：接口面 82 路径 / 91 操作 / 10 组、数据表 19 张、Agent 6 个，与 TDD 登记一致；</p>
+<p>README、验收基线汇总、两份查验报告的基线数字互相一致（533 / 93% / 149 / 37）。</p>
+<hr>
+<h2>三、需求完成度（34 条，M1–M5）</h2>
+<table>
+<thead><tr><th>判定</th><th>条数</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>✅ 已实现</td><td>22</td><td>有代码、有接口、本次可复验</td></tr>
+<tr><td>🟡 部分实现</td><td>5</td><td>主链路在，关键环节缺失或口径收窄</td></tr>
+<tr><td>⚪ 依赖外部未接线</td><td>7</td><td>结构就位，真实能力挂在 Dify 知识库 / ASR / 教务 CRM</td></tr>
+<tr><td>🔴 未实现</td><td>0</td><td>首次查验的 3 条🔴已全部闭环</td></tr>
+</tbody></table>
+<p><strong>🟡 部分实现的 5 条</strong>（缺口均在代码外或数据源侧）：</p>
+<table>
+<thead><tr><th>编号</th><th>需求</th><th>缺哪一块</th></tr></thead>
+<tbody>
+<tr><td>REQ-M1-04</td><td>双产品画像研判</td><td>规则引擎已落地，但判定阈值用的是内置样板规则，甲方正式规则文件未提供</td></tr>
+<tr><td>REQ-M2-04</td><td>课程与项目推荐</td><td>表与接口在，自动匹配规则未接进对话链路</td></tr>
+<tr><td>REQ-M3-01</td><td>语音录入意向客户</td><td>文字路径 ✅；语音只到「转写 + 槽位展示」，未与录入表单打通</td></tr>
+<tr><td>REQ-M4-03</td><td>售后反馈闭环通知</td><td>工单与 AI 摘要 ✅；「处理完毕自动通知学生」依赖真实触达通道</td></tr>
+<tr><td>REQ-M4-05</td><td>进度追踪</td><td>用 <code>student.stage</code> 单字段模拟，未对接院校申请 / 签证系统</td></tr>
+</tbody></table>
+<hr>
+<h2>四、验收标准达成情况（SRS 第七章）</h2>
+<table>
+<thead><tr><th>编号</th><th>验收项</th><th>判定</th><th>卡点</th></tr></thead>
+<tbody>
+<tr><td>AC-01</td><td>研判准确率 ≥90% 且可追溯</td><td>🔴</td><td>无甲方样本集；规则为内置样板</td></tr>
+<tr><td>AC-02</td><td>7 类意图准确率 ≥90%、问答抽样合格率 ≥95%</td><td>🔴</td><td>无标注集，无法实测</td></tr>
+<tr><td>AC-03</td><td>活动报名闭环，后台可查完整记录</td><td>✅</td><td>冒烟已覆盖</td></tr>
+<tr><td>AC-04</td><td>8 项功能可用；NL2SQL 正确率 ≥90%</td><td>🟡</td><td>功能 ✅；无「约定问题集」正确率实测</td></tr>
+<tr><td>AC-05</td><td>指令式操作正确执行并留痕，误操作率 &lt;1%</td><td>🟡</td><td>留痕 ✅、两阶段确认 ✅；误操作率无实测</td></tr>
+<tr><td>AC-06</td><td>7 类场景可用；请假与投诉端到端跑通</td><td>🟡</td><td>请假 / 投诉 ✅；学业考务与进度追踪受数据源限制</td></tr>
+<tr><td>AC-07</td><td>高危样本触发、触达时延 ≤5s、无漏报</td><td>🔴</td><td>无真实触达通道，时延不可测</td></tr>
+<tr><td>AC-08</td><td>5 类报告自动生成 + 四格式导出 + 定时推送</td><td>🟡</td><td>生成 ✅、导出 ✅、推送链路 ✅（分发通道为站内 / 外部待接）</td></tr>
+<tr><td>AC-09</td><td>性能达标 + 渗透测试无高危漏洞</td><td>🔴</td><td>未做渗透测试；性能仅在 mock 模式压过</td></tr>
+</tbody></table>
+<hr>
+<h2>五、已闭环的加固项（本轮之前完成，本轮回归确认仍有效）</h2>
+<table>
+<thead><tr><th>加固项</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>CRM 客户数据行级隔离（employee 只看自己名下）</td><td>✅ 7 条越权路径 403</td></tr>
+<tr><td>接口限流（登录 30/min·IP，对话 120/min·账号）</td><td>✅ 429 + <code>code=42900</code></td></tr>
+<tr><td><code>/health</code> 监控探针（QPS / 错误率 / p95 / 意图分布）</td><td>✅</td></tr>
+<tr><td>客户手机号字段级加密（三件套，默认关闭）</td><td>✅ 代码就位，⚠️ 未开启</td></tr>
+<tr><td>对话内容安全（PII 打码 + 违禁拦截）</td><td>✅</td></tr>
+<tr><td>Dify 工具 <code>lead_query</code> 行级收敛（fail closed）</td><td>✅</td></tr>
+<tr><td>CI 流水线 / 并发压测 / 生产配置守卫 / 答辩材料</td><td>✅</td></tr>
+<tr><td>本机密钥轮换 + <code>DEBUG=false</code></td><td>✅ 守卫脚本 0 FAIL</td></tr>
+</tbody></table>
+<hr>
+<h2>六、上线风险清单（未闭环项）</h2>
+<h3>P0 · 准出阻塞（不满足则 AC-01/02/05/07 无法验收）</h3>
+<table>
+<thead><tr><th>#</th><th>风险</th><th>影响</th><th>建议动作</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td>甲方《用户画像研判规则》及双产品判定阈值未提供，现用内置样板规则</td><td>研判结论与甲方口径可能不一致；AC-01 不可验收</td><td>向甲方索取规则文件，落进 <code>services/rules.py</code> 版本化导入</td></tr>
+<tr><td>R2</td><td>26 个业务工具在 Dify 侧仅 3 个只读节点接线，写类工具未联调</td><td>「指令式业务处理」在 live 模式下走不通；AC-05</td><td>与 Dify 侧联调并验收写工具的两阶段确认链路</td></tr>
+<tr><td>R3</td><td>无真实触达通道（企微 / 短信 / 公众号）</td><td>AC-07 永远无法验收，高危预警无法真正送达</td><td>确定渠道与账号，接入 <code>services/notify.py</code> 渠道适配层</td></tr>
+<tr><td>R4</td><td>准确率类指标（AC-01/02）无标注样本集</td><td>无法给出 ≥90% 的实测证据</td><td>请甲方提供历史咨询记录与判定样本</td></tr>
+<tr><td>R5</td><td>未做渗透测试（AC-09）</td><td>上线前安全合规无据</td><td>上线前安排第三方或内部渗透，至少覆盖越权与注入</td></tr>
+</tbody></table>
+<h3>P1 · 面向生产可用</h3>
+<table>
+<thead><tr><th>#</th><th>风险</th><th>影响</th><th>建议动作</th></tr></thead>
+<tbody>
+<tr><td>R6</td><td>全链路无 HTTPS（无 TLS 终止）</td><td>传输层明文</td><td>网关 / Nginx 终止 TLS</td></tr>
+<tr><td>R7</td><td>字段加密未开启（<code>FIELD_ENCRYPTION_KEY</code> 未配置）</td><td>客户手机号明文落库，拖库即泄露</td><td>配置 key → 备份库 → 跑 <code>scripts/encrypt_backfill.py</code> 回填</td></tr>
+<tr><td>R8</td><td>数据库为 SQLite</td><td>单进程，无并发写保护</td><td>多用户 / 多 worker 部署换 MySQL（<code>requirements-mysql.txt</code> 已备）</td></tr>
+<tr><td>R9</td><td>限流与指标为进程内内存实现</td><td>多 worker / 多机部署时失效</td><td>换 Redis 实现（接口不变）</td></tr>
+<tr><td>R10</td><td>真实 Dify 链路未压测（现压测为 mock）</td><td>SRS 6.1「并发 ≥200 / 可用性 ≥99.5%」无证据</td><td>live 模式下补一轮压测，与本机毫秒级数据分开报</td></tr>
+</tbody></table>
+<h3>P2 · 完善度</h3>
+<table>
+<thead><tr><th>#</th><th>风险</th><th>建议动作</th></tr></thead>
+<tbody>
+<tr><td>R11</td><td>学业考务数据源（REQ-M4-04）依赖教务系统</td><td>取接口文档与测试账号后对接</td></tr>
+<tr><td>R12</td><td>进度追踪（REQ-M4-05）依赖 CRM / 申请系统</td><td>同上</td></tr>
+<tr><td>R13</td><td>知识库内容源为自建样本文档（26 篇）</td><td>替换成甲方《公司信息》《公司业务》《留学政策》</td></tr>
+<tr><td>R14</td><td>ASR 仍为 mock provider</td><td>确定 ASR 供应商与方言需求后接线</td></tr>
+<tr><td>R15</td><td>无 K8s / 多环境（DEV/TEST/UAT/PROD）</td><td>TDD 列二期，按部署形态决定</td></tr>
+</tbody></table>
+<hr>
+<h2>七、本次验收发现的新问题（观察项，非阻塞）</h2>
+<table>
+<thead><tr><th>#</th><th>现象</th><th>严重度</th><th>建议</th></tr></thead>
+<tbody>
+<tr><td>O1</td><td><code>reports/frontend_e2e_report.md</code> 停留在 2026-09-15 20:36，而同轮 <code>frontend_e2e_report.json</code> 已刷新为 23:46</td><td>低（证据新鲜度）</td><td>让 E2E 脚本同时刷新 md，或在 md 顶部标注「对应 json 时间戳」，避免误读为未重跑</td></tr>
+<tr><td>O2</td><td>冒烟累计耗时 28.1s（live 模式）较 mock 模式（563 ms）高两个量级</td><td>提示（非缺陷）</td><td>属真实模型链路固有耗时，评审时应分开陈述，不要与 mock 数据混报</td></tr>
+</tbody></table>
+<hr>
+<h2>八、演示 / 答辩前必做（Checklist）</h2>
+<ol><li><code>python scripts/check_dify.py</code> —— 先探活；若容器掉了（今晚曾发生），把 <code>.env</code> 的 <code>DIFY_MODE=live</code> 改成 <code>mock</code> 并重启即可继续演示。</li><li>重新登录一次 —— 密钥已轮换，<strong>旧 Token 立即失效</strong>（JWT 无状态），不是故障。</li><li>一键复现证据用 <code>python scripts/regression.py</code>（约 100s），不要后台挂起 launcher（stdout 管道不收口会假死）。</li><li>演示口径：本系统处理耗时是毫秒级（压测 p95 27 ms），真实模型耗时是秒级，两个数分开讲。</li></ol>
+<hr>
+<h2>九、验收签署建议</h2>
+<ul><li><strong>交付 / 结题验收</strong>：建议<strong>通过</strong>，附本报告的实测基线与四条一键复现命令作为证据链。</li><li><strong>生产上线</strong>：建议<strong>有条件通过</strong> —— 关闭 R1 / R2 / R3 / R5 后再走上线评审；R6–R10 应在上线方案中明确责任人与时间点。</li><li><strong>后续动作</strong>：本验收结论上传项目资料库归档。</li></ul>
+<h3>遗留问题事项清单（2026-09-17 已建，指派：又肥了三金）</h3>
+<table>
+<thead><tr><th>编号</th><th>事项 ID</th><th>优先级</th></tr></thead>
+<tbody>
+<tr><td>R1 甲方研判规则文件</td><td><code>rPQBSZ</code></td><td>urgent</td></tr>
+<tr><td>R2 26 工具 Dify 侧联调</td><td><code>rEAHCI</code></td><td>urgent</td></tr>
+<tr><td>R3 真实触达通道</td><td><code>rm60Au</code></td><td>urgent</td></tr>
+<tr><td>R4 标注样本集与准确率实测</td><td><code>rMdBlp</code></td><td>urgent</td></tr>
+<tr><td>R5 渗透测试</td><td><code>rVlrX9</code></td><td>urgent</td></tr>
+<tr><td>R6 HTTPS / TLS 终止</td><td><code>rNpnhV</code></td><td>high</td></tr>
+<tr><td>R7 开启字段加密并回填</td><td><code>rWe7Ph</code></td><td>high</td></tr>
+<tr><td>R8 生产库换 MySQL</td><td><code>r8T7NJ</code></td><td>high</td></tr>
+<tr><td>R9 限流与指标换 Redis</td><td><code>raX6ht</code></td><td>high</td></tr>
+<tr><td>R10 live 模式并发压测</td><td><code>rJPr2b</code></td><td>high</td></tr>
+<tr><td>R11 教务系统数据源</td><td><code>ri4YxJ</code></td><td>medium</td></tr>
+<tr><td>R12 CRM / 申请系统对接</td><td><code>rwkkTW</code></td><td>medium</td></tr>
+<tr><td>R13 知识库换甲方正式文档</td><td><code>rSofNt</code></td><td>medium</td></tr>
+<tr><td>R14 ASR 真实 provider</td><td><code>r2XuQm</code></td><td>medium</td></tr>
+<tr><td>R15 环境划分与 K8s 决策</td><td><code>rf5nsj</code></td><td>low</td></tr>
+<tr><td>O1 E2E 报告 md/json 不同步</td><td><code>rnXldA</code></td><td>low</td></tr>
+</tbody></table>
+</main>
+</body>
+</html>

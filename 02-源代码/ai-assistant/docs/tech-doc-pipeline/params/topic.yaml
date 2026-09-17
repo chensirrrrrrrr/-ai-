@@ -1,0 +1,11 @@
+detected_doc_type: "技术实现与部署文档"
+target_length: 7000
+target_tone: "第三人称技术说明体，正式度★★★★☆，以可复现操作为导向"
+audience: "项目开发者、运维/DBA、技术评审人"
+core_points:
+  - "技术栈锁定 Python + FastAPI + Dify(Agent) + MySQL/SQLite 的落地实现"
+  - "分层架构与 18 张数据表的数据模型（含 SQLite/MySQL 双栈兼容）"
+  - "七大核心机制的实现细节：统一响应体、两阶段意图路由、Dify 编排、ASR、受控 NL2SQL、幂等与审计、HMAC 内部工具"
+  - "49 个接口的完整清单"
+  - "本地 SQLite 与 MySQL/Docker 两条部署路径"
+  - "实测测试结论：83 单元/集成用例、90% 覆盖率、62 条冒烟用例全通过"

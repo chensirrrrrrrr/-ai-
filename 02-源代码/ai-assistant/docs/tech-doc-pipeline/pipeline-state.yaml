@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "request_id": "46fcd8eb-a902-497c-b8f9-89aea6b3d799",
+  "created_at": "2026-09-13T21:50:24",
+  "updated_at": "2026-09-13T21:56:34",
+  "entry_type": "full_pipeline",
+  "stage_chain": [
+    1,
+    2,
+    3
+  ],
+  "output_docx_path": "C:\\Users\\机械革命\\Desktop\\AI智能助手系统_技术实现与部署文档.docx",
+  "output_docx_user_specified": true,
+  "current_stage": "completed",
+  "stages": {
+    "stage_0": {
+      "status": "completed",
+      "completed_at": "2026-09-13T21:50:24",
+      "decision": "full_pipeline"
+    },
+    "stage_1": {
+      "status": "completed",
+      "started_at": "2026-09-13T21:51:54",
+      "completed_at": "2026-09-13T21:51:54",
+      "output_path": "stage1/final_draft.md",
+      "genre": "general",
+      "expert_used": "general-writer",
+      "route_tag": "general_writing",
+      "critic_decision": null
+    },
+    "stage_2": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "route": null,
+      "html_sub": null,
+      "output_path": null,
+      "output_format": null,
+      "skills_invoked": [],
+      "design_tokens_path": null,
+      "fallback": false,
+      "fallback_reason": null
+    },
+    "stage_3": {
+      "status": "completed",
+      "started_at": "2026-09-13T21:56:34",
+      "completed_at": "2026-09-13T21:56:34",
+      "executor": "doc-converter",
+      "input_format": "html",
+      "output_path": "C:\\Users\\机械革命\\Desktop\\AI智能助手系统_技术实现与部署文档.docx",
+      "skill_used": [
+        "html-to-docx"
+      ],
+      "present_files_opened": true,
+      "fallback": false,
+      "fallback_reason": null
+    }
+  },
+  "consistency_check": {
+    "output_files_exist": "fail",
+    "stage_chain_complete": "fail",
+    "last_checked_at": "2026-09-13T21:56:34",
+    "errors": [
+      "stage_2: output_path 为空"
+    ]
+  }
+}

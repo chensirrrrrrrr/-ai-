@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>留学机构 AI 智能助手 · 智能服务门户</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='22' font-family='Segoe UI,sans-serif' font-size='14' font-weight='700' fill='%23fff' text-anchor='middle'%3EAI%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- ============================================================
+       访客落地页：默认首页，无需登录即可访问。
+       两个出口 —— 「免费咨询」直接以访客身份进入客服对话，
+       「员工登录」切到登录屏。
+       ============================================================ -->
+  <div id="landing" class="landing">
+    <header class="landing-nav">
+      <div class="landing-nav-inner">
+        <a class="landing-brand" href="#top">
+          <span class="landing-brand-logo">AI</span>
+          <span class="landing-brand-text">
+            <strong>留学机构 · AI 智能助手</strong>
+            <small>Study Abroad AI Assistant</small>
+          </span>
+        </a>
+        <nav class="landing-links">
+          <a href="#capability">服务能力</a>
+          <a href="#scene">应用场景</a>
+          <a href="#flow">服务流程</a>
+          <a href="#faq">常见问题</a>
+        </nav>
+        <div class="landing-nav-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="landing-theme">切换主题</button>
+          <button type="button" class="btn btn-sm" data-landing="login">员工登录</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="landing-hero" id="top">
+      <div class="landing-hero-inner">
+        <div class="landing-hero-copy">
+          <span class="landing-eyebrow">AI + 留学服务全流程</span>
+          <h1>把重复问答交给 AI<br>把专业判断留给人</h1>
+          <p class="landing-lede">
+            面向留学机构的智能助手：自动应答院校、专业、费用、签证等高频咨询，
+            并串联线索跟进、学员服务、运营看板与数据分析，让顾问把时间花在真正需要人的地方。
+          </p>
+          <div class="landing-cta">
+            <button type="button" class="btn btn-primary btn-lg" data-landing="visitor">
+              免费咨询（访客体验）
+            </button>
+            <button type="button" class="btn btn-lg" data-landing="login">员工登录</button>
+          </div>
+          <p class="landing-cta-hint">
+            访客无需账号，可直接与 AI 客服对话；内部账号请联系管理员开通。
+          </p>
+          <ul class="landing-badges">
+            <li>7×24 自动答疑</li>
+            <li>多 Agent 意图路由</li>
+            <li>角色权限隔离</li>
+          </ul>
+        </div>
+
+        <div class="landing-hero-visual">
+          <div class="mock-window">
+            <div class="mock-titlebar">
+              <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
+              <em>AI 客服 · 在线</em>
+            </div>
+            <div class="mock-body">
+              <div class="mock-msg mock-user">英国硕士 2026 秋季入学，一般什么时候截止？</div>
+              <div class="mock-msg mock-bot">
+                多数英国院校采用滚动录取，热门专业在前一年 10—12 月即陆续截止；
+                建议至少提前 12 个月开始准备文书与语言成绩。
+                <span class="mock-chips"><i>院校清单</i><i>材料要求</i><i>时间规划</i></span>
+              </div>
+              <div class="mock-typing"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="mock-glow"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section" id="capability">
+      <div class="landing-section-head">
+        <h2>一套系统，覆盖从咨询到复盘</h2>
+        <p>六大模块串起留学服务的完整链路，访客与内部角色各取所需。</p>
+      </div>
+      <div class="landing-grid">
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 1 1 21 12z"/>
+            </svg>
+          </span>
+          <h3>智能客服问答</h3>
+          <p>7×24 应答院校、专业、费用、签证等高频问题，支持追问与上下文理解。</p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            </svg>
+          </span>
+          <h3>客户与线索管理</h3>
+          <p>线索录入、分配、跟进记录与阶段流转集中在一处，不再散落在聊天记录里。</p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10 12 5 2 10l10 5 10-5z"/>
+              <path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/>
+            </svg>
+          </span>
+          <h3>学员服务</h3>
+          <p>申请进度、材料清单、请假与日常事务自助查询，顾问少答一遍重复问题。</p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>
+            </svg>
+          </span>
+          <h3>运营看板</h3>
+          <p>转化漏斗、顾问业绩、时段分布一屏可见，团队节奏有据可依。</p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/>
+              <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>
+            </svg>
+          </span>
+          <h3>数据分析</h3>
+          <p>收入结构、院校分布、渠道效果自动汇总，复盘不再靠手工拉表。</p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.07 4.93l-2.12 2.12M7.05 16.95l-2.12 2.12M19.07 19.07l-2.12-2.12M7.05 7.05 4.93 4.93"/>
+            </svg>
+          </span>
+          <h3>系统与权限</h3>
+          <p>角色权限、Agent 编排、Dify 工作流对接与运行状态，管理员统一配置。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-section" id="scene">
+      <div class="landing-section-head">
+        <h2>不同角色，各看各的</h2>
+        <p>同一套系统按角色下发视图，访客只触达客服 Agent，内部数据不外泄。</p>
+      </div>
+      <div class="landing-scene-grid">
+        <article class="landing-scene">
+          <h3>顾问 / 员工</h3>
+          <ul>
+            <li>线索与客户跟进台账</li>
+            <li>学员申请进度与材料核对</li>
+            <li>AI 辅助生成沟通话术与跟进建议</li>
+          </ul>
+        </article>
+        <article class="landing-scene">
+          <h3>学生 / 家长</h3>
+          <ul>
+            <li>自助查询申请进度与截止时间</li>
+            <li>材料清单、签证与行前准备问答</li>
+            <li>请假、约课等日常事务</li>
+          </ul>
+        </article>
+        <article class="landing-scene">
+          <h3>管理层</h3>
+          <ul>
+            <li>转化漏斗与顾问业绩看板</li>
+            <li>收入结构与渠道效果分析</li>
+            <li>Agent 命中率与服务质量复盘</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-section" id="flow">
+      <div class="landing-section-head">
+        <h2>一次提问，四步走完</h2>
+        <p>从访客发问，到给出可执行的答复，全程自动完成。</p>
+      </div>
+      <ol class="landing-flow">
+        <li>
+          <span class="landing-step">01</span>
+          <h3>接收提问</h3>
+          <p>访客或学员在对话框里提出问题，无需选择菜单。</p>
+        </li>
+        <li>
+          <span class="landing-step">02</span>
+          <h3>意图路由</h3>
+          <p>识别问题类型，分派给客服、学员或业务 Agent 处理。</p>
+        </li>
+        <li>
+          <span class="landing-step">03</span>
+          <h3>知识检索</h3>
+          <p>结合机构知识库与业务数据，取回与问题相关的依据。</p>
+        </li>
+        <li>
+          <span class="landing-step">04</span>
+          <h3>生成答复</h3>
+          <p>输出带下一步动作的答复，必要时转人工顾问跟进。</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="landing-section" id="faq">
+      <div class="landing-section-head">
+        <h2>常见问题</h2>
+        <p>开始之前，你可能想知道这些。</p>
+      </div>
+      <div class="landing-faq">
+        <details>
+          <summary>访客能体验什么？</summary>
+          <p>
+            访客无需账号即可与 AI 客服对话，但只能触达客服咨询与会话记录；
+            客户台账、运营与财务数据对访客不可见，后端按角色拦截并返回 403。
+          </p>
+        </details>
+        <details>
+          <summary>数据安全如何保证？</summary>
+          <p>
+            角色一律以登录令牌为准，前端不传角色参数；接口层按角色做白名单校验，
+            越权访问会被直接拒绝。演示环境使用本地 SQLite，数据不出本机。
+          </p>
+        </details>
+        <details>
+          <summary>能接入机构自己的知识库吗？</summary>
+          <p>
+            可以。系统通过 Dify 工作流对接知识库与应用编排，
+            在 mock 模式下可以用内置演示数据先跑通链路，再切换到真实 Dify 实例。
+          </p>
+        </details>
+        <details>
+          <summary>如何获得正式账号？</summary>
+          <p>
+            请点击右上角「员工登录」进入登录屏，使用管理员分配的账号登录；
+            登录屏同时也列出了演示账号，方便先了解各角色的视图差异。
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <section class="landing-band">
+      <div class="landing-band-inner">
+        <div>
+          <h2>先以访客身份试试看</h2>
+          <p>不用注册，点一下就能开始提问。</p>
+        </div>
+        <div class="landing-band-actions">
+          <button type="button" class="btn btn-primary btn-lg" data-landing="visitor">
+            免费咨询（访客体验）
+          </button>
+          <button type="button" class="btn btn-lg" data-landing="login">员工登录</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="landing-foot">
+      <span>留学机构 AI 智能助手 · 智能服务门户</span>
+      <span>FastAPI · Dify · SQLite · 零构建 ES Module</span>
+    </footer>
+  </div>
+
+  <!-- 未登录：登录屏 -->
+  <div id="login-screen" class="login-screen" hidden>
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-logo">AI</div>
+        <h1>留学机构 AI 智能助手</h1>
+        <p class="login-sub">管理控制台 · 前后端分离前端</p>
+      </div>
+
+      <form id="login-form" class="login-form" autocomplete="on">
+        <label class="field">
+          <span>账号</span>
+          <input type="text" name="username" id="login-username" placeholder="advisor / manager / student" required>
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <input type="password" name="password" id="login-password" placeholder="••••••" required>
+        </label>
+        <label class="field">
+          <span>接口地址</span>
+          <input type="text" name="api_base" id="login-api-base" placeholder="http://127.0.0.1:8010">
+        </label>
+        <p class="field-hint">
+          后端与前端完全独立部署，此处填写后端 API 的地址即可对接。
+        </p>
+
+        <button type="submit" class="btn btn-primary btn-block" id="login-submit">登录</button>
+      </form>
+
+      <div class="login-actions">
+        <button type="button" class="btn btn-ghost" id="btn-visitor">以访客身份进入</button>
+        <button type="button" class="btn btn-ghost" id="btn-back-home">返回首页</button>
+      </div>
+
+      <div class="login-demo">
+        <p class="login-demo-title">演示账号（种子数据）</p>
+        <div class="demo-grid" id="demo-accounts"></div>
+      </div>
+
+      <p class="login-error" id="login-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- 已登录：控制台 -->
+  <div id="console" class="console" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">AI</div>
+        <div class="brand-text">
+          <strong>智能助手</strong>
+          <small>管理控制台</small>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav"></nav>
+
+      <div class="sidebar-foot">
+        <div class="mode-line" id="mode-line">
+          <span class="dot dot-idle"></span><span id="mode-text">检测中…</span>
+        </div>
+        <button class="btn btn-ghost btn-block" id="btn-theme">切换主题</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="page-title">对话助手</h1>
+          <p id="page-desc" class="page-desc"></p>
+        </div>
+        <div class="topbar-right">
+          <div class="user-chip" id="user-chip"></div>
+          <button class="btn btn-ghost" id="btn-logout">退出</button>
+        </div>
+      </header>
+
+      <section class="view" id="view"></section>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack"></div>
+  <div class="modal-root" id="modal-root" hidden></div>
+
+  <!-- 运行时配置：由 scripts/serve_frontend.py 动态生成后端地址；用别的静态
+       服务器托管时这个文件也存在，只是值为空，前端回落到默认地址。 -->
+  <script src="./runtime-config.js"></script>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

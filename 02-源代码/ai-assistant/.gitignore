@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+data/
+*.db
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# 一键启动器的运行态（PID 记录 + 服务日志），不入库
+.run/
+
+# 调试期归档（日志、转码中间脚本、一次性校验产物），不入库
+_lab/
+# 浏览器 E2E 的截图产物，体积大，按需生成
+reports/frontend_shots*/
+reports/*_report.json

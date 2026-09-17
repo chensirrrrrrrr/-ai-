@@ -1,0 +1,42 @@
+# ---------- Python / 运行时产物 ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---------- 环境变量（含真实 API Key，绝不入库） ----------
+.env
+*.env
+.env.*
+!.env.example
+
+# ---------- 数据库与上传物（运行时产物，体积大且每次都变） ----------
+*.db
+*.db-wal
+*.db-shm
+*.db.bak
+/02-源代码/ai-assistant/data/
+/02-源代码/ai-assistant/uploads/
+
+# ---------- 测试 / 覆盖率产物 ----------
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+/02-源代码/ai-assistant/data/test_ai_assistant.db
+
+# ---------- E2E 运行时产物（每次跑都会变） ----------
+/02-源代码/ai-assistant/reports/frontend_shots/
+/02-源代码/ai-assistant/_probe_scratch
+
+# ---------- 备份与临时 ----------
+reports/_bak*/
+*.bak
+*.bak2-*
+_probe.py
+_lab/
+
+# ---------- 系统 ----------
+.DS_Store
+Thumbs.db
