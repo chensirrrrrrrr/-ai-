@@ -378,16 +378,14 @@ def test_screening_batch_guards_and_partial_failure(db, ctx):
     lead = db.query(CustomerLead).first()
     out = h(db, {"items": [{"raw_text": "本科，GPA 3.6，雅思 6.5，目标英国"},
                            {"raw_text": "本科，GPA 3.0", "lead_id": 999999}],
-                 "lead_ids": [lead.id]}, ctx)
-    # items 里的一条死在「客户不存在」上，但不牵连另一条，也不牵连按客户拼出来的那条
-    assert out["total"] == 3 and out["succeeded"] == 2 and out["failed"] == 1
+                 "lead_ids": [lead.id, 999998]}, ctx)
+    # 四条里两条死在「客户不存在」上（items 里的一条、lead_ids 里的一条），
+    # 其余两条照常成功 —— 「单条失败不影响其余」对 items 与 lead_ids **一视同仁**。
+    assert out["total"] == 4 and out["succeeded"] == 2 and out["failed"] == 2
     assert out["items"][0]["ok"] is True and out["items"][2]["ok"] is True
-    assert "不存在" in out["items"][1]["error"]
-
-    # ⚠️ 已知不一致：`lead_ids` 拼文本发生在 try 之外，客户不存在会让**整批**失败，
-    # 与「单条失败不影响其余」的承诺不符。这里只把行为钉住，改不改见报告。
-    with pytest.raises(AppError, match="意向客户 999998 不存在"):
-        agent_tools._lead_text(db, 999998)
+    assert all("不存在" in item["error"] for item in (out["items"][1], out["items"][3]))
+    # 序号必须与提交顺序一致，失败原因能对应到具体那一条
+    assert [item["index"] for item in out["items"]] == [0, 1, 2, 3]
 
     assert "批量研判 2 份材料" in _preview("screening_batch")(db, {"items": [{}, {}],
                                                             "lead_ids": [1, 2]})

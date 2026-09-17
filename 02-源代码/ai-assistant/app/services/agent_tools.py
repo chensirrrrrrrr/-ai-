@@ -431,16 +431,15 @@ def _screening_batch(db: Session, params: Dict[str, Any], ctx: ToolContext) -> D
     items = params.get("items") or []
     if not isinstance(items, list):
         raise AppError("items 必须是数组")
+    lead_ids = params.get("lead_ids") or []
+    if not items and not lead_ids:
+        raise AppError("screening_batch 需要 items 或 lead_ids")
     # `lead_ids` 是「按客户研判」：材料不在参数里，而是该客户的备注 + 最近跟进，
     # 否则这些条目会因为「没有 raw_text」而全部失败，批量入口等于废掉。
-    by_lead = [{"lead_id": i, "raw_text": _lead_text(db, i)}
-               for i in (params.get("lead_ids") or [])]
-    items = list(items) + by_lead
-    if not items:
-        raise AppError("screening_batch 需要 items 或 lead_ids")
     succeeded, failed, results = 0, 0, []
-    for index, item in enumerate(items):
-        raw = item if isinstance(item, dict) else {"raw_text": str(item)}
+
+    def _run(index: int, raw: Dict[str, Any]) -> None:
+        nonlocal succeeded, failed
         try:
             out = _screening_analyze(db, raw, ctx)
             succeeded += 1
@@ -448,7 +447,22 @@ def _screening_batch(db: Session, params: Dict[str, Any], ctx: ToolContext) -> D
         except Exception as exc:                       # noqa: BLE001 - 单条失败不牵连整批
             failed += 1
             results.append({"index": index, "ok": False, "error": str(exc)})
-    return {"total": len(items), "succeeded": succeeded, "failed": failed, "items": results}
+
+    for index, item in enumerate(items):
+        _run(index, item if isinstance(item, dict) else {"raw_text": str(item)})
+    for offset, lead_id in enumerate(lead_ids):
+        # 拼客户文本也要逐条容错：客户不存在只算这一条失败，
+        # 否则整个批量入口被一个坏 ID 炸掉，违背「单条失败不影响其余」的承诺。
+        try:
+            raw = {"lead_id": lead_id, "raw_text": _lead_text(db, lead_id)}
+        except Exception as exc:                       # noqa: BLE001 - 同上
+            failed += 1
+            results.append({"index": len(items) + offset, "ok": False,
+                            "error": str(exc)})
+            continue
+        _run(len(items) + offset, raw)
+    return {"total": len(results), "succeeded": succeeded, "failed": failed,
+            "items": results}
 
 
 def _lead_text(db: Session, lead_id: Any) -> str:
