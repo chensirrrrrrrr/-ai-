@@ -17,7 +17,7 @@
 
 ## 验收基线（2026-09-17 全绿）
 
-pytest **502/502（覆盖率 93%）** · smoke_test.py 149/149 · selfcheck 全过 · E2E(frontend_e2e.mjs) 37/37 · check_dify.py 7/7
+pytest **531/531（覆盖率 93%）** · smoke_test.py 149/149 · selfcheck 全过 · E2E(frontend_e2e.mjs) 37/37 · check_dify.py 7/7
 （演进：09-16 基线 415/88% → 09-17 查验整改后 440/90% → 同日收口低覆盖模块后 472/91% → 再收口 agent_tools 后 **502/93%**。）
 
 ⚠️ 起常驻服务必须用**后台任务**：

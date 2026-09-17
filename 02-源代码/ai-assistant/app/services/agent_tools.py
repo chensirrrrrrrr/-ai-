@@ -33,6 +33,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..config import settings
@@ -41,6 +42,7 @@ from ..models import (Activity, ActivityEnrollment, AfterSalesTicket, CustomerFo
                       CustomerLead, Employee, EmployeeReport, LeadScreening,
                       PendingAction, Student, StudentRequest)
 from . import deadline, material, notify, onboarding, reports, rules, todo
+from . import crypto
 from .nl2sql import run_query
 
 logger = logging.getLogger(__name__)
@@ -106,11 +108,19 @@ def _lead_query(db: Session, params: Dict[str, Any], ctx: ToolContext) -> Dict[s
     query = db.query(CustomerLead)
     if keyword:
         like = f"%{keyword}%"
-        query = query.filter(CustomerLead.name.like(like) | CustomerLead.phone.like(like))
+        conds = [CustomerLead.name.like(like), CustomerLead.phone.like(like)]
+        # 加密开启后库里没有明文全号，纯数字关键字走 HMAC 等值匹配兜底
+        if crypto.enabled() and keyword.isdigit() and len(keyword) >= 7:
+            conds.append(CustomerLead.phone_hash == crypto.phone_hash(keyword))
+        query = query.filter(or_(*conds))
     if params.get("status"):
         query = query.filter(CustomerLead.status == str(params["status"]).upper())
     if params.get("phone"):
-        query = query.filter(CustomerLead.phone == params["phone"])
+        # 等值检索兼容「密文行 + 历史明文行」并存
+        cond = crypto.lookup_condition(params["phone"])
+        if crypto.enabled():
+            cond = or_(cond, CustomerLead.phone == params["phone"])
+        query = query.filter(cond)
     owner = params.get("owner") or params.get("owner_id")
     if owner not in (None, ""):
         if str(owner).isdigit():
@@ -335,13 +345,17 @@ def _lead_create(db: Session, params: Dict[str, Any], ctx: ToolContext) -> Dict[
     phone = (params.get("phone") or "").strip()
     if not name or not phone:
         raise AppError("lead_create 需要 name 与 phone")
-    exists = db.query(CustomerLead).filter(CustomerLead.phone == phone).first()
+    dup_cond = CustomerLead.phone == phone
+    if crypto.enabled():
+        dup_cond = or_(crypto.lookup_condition(phone), dup_cond)
+    exists = db.query(CustomerLead).filter(dup_cond).first()
     if exists is not None:
         raise AppError(f"手机号 {phone} 已存在（客户 #{exists.id} {exists.name}），不再重复创建")
     lead = CustomerLead(name=name, phone=phone, source=params.get("source"),
                         intention_country=params.get("intention") or params.get("intention_country"),
                         intention_stage=params.get("intention_stage"),
                         remark=params.get("remark"), status="NEW")
+    lead.phone, lead.phone_hash, lead.phone_enc = crypto.apply_phone(phone)
     db.add(lead)
     db.flush()
     return {"id": lead.id, "name": lead.name, "phone": lead.phone, "status": lead.status}

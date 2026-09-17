@@ -89,6 +89,11 @@ class CustomerLead(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(16), default="NEW", nullable=False, index=True)
     owner_id: Mapped[Optional[int]] = mapped_column(ForeignKey("employee.id"), index=True)
     remark: Mapped[Optional[str]] = mapped_column(String(512))
+    # 字段级加密（见 services/crypto 的说明）：开启后 `phone` 存**打码值**用于展示，
+    # 全号密文在 `phone_enc`，等值检索走 `phone_hash`（HMAC，确定性，可建索引）。
+    # 两列可空 ⇒ 存量库由 `_sync_missing_columns` 只加不改地补上，老数据不受影响。
+    phone_hash: Mapped[Optional[str]] = mapped_column(String(64), index=True)
+    phone_enc: Mapped[Optional[str]] = mapped_column(Text)
 
 
 class CustomerFollowup(Base):

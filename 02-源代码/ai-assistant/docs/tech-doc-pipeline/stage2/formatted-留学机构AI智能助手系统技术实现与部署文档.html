@@ -489,7 +489,7 @@ def _set_sqlite_pragma(dbapi_conn, _):
     <p><strong>两类端点的调用差异。</strong> 对话型应用调用 <code>POST /v1/chat-messages</code>，请求体含 <code>query</code>、<code>response_mode</code>、<code>conversation_id</code>、<code>user</code>；工作流应用调用 <code>POST /v1/workflows/run</code>，请求体传命名参数 <code>inputs</code> 而非 <code>query</code>，结果从 <code>data.outputs</code> 读取。<code>user</code> 字段用于终态用户标识与会话隔离，项目以 <code>DIFY_USER_PREFIX</code> 前缀拼接业务用户 ID 后传入。</p>
     <p><strong>模型接入：对话与嵌入均走云端。</strong> 编排平台自身需要两类模型——负责推理的对话模型，以及负责把知识库文档向量化的嵌入模型。项目把两者都指向云端 API：<strong>对话模型</strong>走云端大模型，<strong>知识库嵌入模型</strong>走智谱 <code>embedding-3</code>（向量维度 2048）。这样做的直接收益是<strong>全链路不再依赖本地常驻模型</strong>——后端、数据库、编排平台与模型服务都可在无独立显卡的机器上运行，演示环境与生产环境的模型行为也保持一致。代价是推理与知识库建索引都需要外网连通，因此编排平台所在容器必须放行出网（默认的出网代理已覆盖该场景）。</p>
     <p><strong>mock / live 双模式。</strong> 这是本项目最重要的可测试性设计。<code>DIFY_MODE=mock</code> 时，<code>DifyClient</code> 不发起任何网络请求，而是返回确定性的构造响应：知识类问题返回内置知识库答案并附带引用来源，工作流类返回结构化的模拟输出，意图路由按关键词匹配表给出 <code>agent</code> 与 <code>intent</code>。这一机制带来三个直接收益：</p>
-    <ol><li><strong>离线可测。</strong> 完整的 512 条自动化测试与 149 条冒烟测试全部在无 Dify 实例的环境下运行并通过。</li><li><strong>演示零依赖。</strong> 无网络、无 Dify 部署也能完整演示全部业务链路。</li><li><strong>降级有据。</strong> <code>DIFY_MODE=live</code> 时，一旦上游超时、限流或返回错误，<code>DifyClient</code> 捕获异常后回落到同一套 mock 响应，保证接口不因上游抖动而不可用，同时在日志中留痕。</li></ol>
+    <ol><li><strong>离线可测。</strong> 完整的 531 条自动化测试与 149 条冒烟测试全部在无 Dify 实例的环境下运行并通过。</li><li><strong>演示零依赖。</strong> 无网络、无 Dify 部署也能完整演示全部业务链路。</li><li><strong>降级有据。</strong> <code>DIFY_MODE=live</code> 时，一旦上游超时、限流或返回错误，<code>DifyClient</code> 捕获异常后回落到同一套 mock 响应，保证接口不因上游抖动而不可用，同时在日志中留痕。</li></ol>
     <p><strong>流式输出。</strong> <code>/chat/stream</code> 以 SSE 转发 Dify 的流式响应，逐条推送 <code>data:</code> 事件，最后以 <code>[DONE]</code> 收尾。实测一次完整流式应答产生 13 个事件。</p>
     <p><strong>编排画布改用图编程。</strong> 学员助手后来从单纯的「人设 + 知识库」对话型应用升级为 Chatflow：一个起始节点接一个<strong>问题分类器</strong>，把学员提问分成 6 类，再分别接「HTTP 请求取数 → LLM 整理 → 直接回复」的三节点分支（成绩 / 申请单 / 工单）、两个 LLM 引导分支（请假、投诉等写操作只做槽位抽取与二次确认引导，<strong>不直接落库</strong>），以及一个「知识库检索 → LLM → 回复」分支兜底。整图 18 个节点、17 条连线。</p>
     <p>这样做的收益很直接：<strong>能在画布上确定下来的分支就用画布表达，模型只负责"分到哪一类"这一件事</strong>，比纯靠提示词约束稳定得多。代价是引入了几个只有在图编程里才会遇到的坑，记录如下：</p>
@@ -672,7 +672,7 @@ pip install -r requirements.txt</pre>
     <h3>（一）单元与集成测试</h3>
     <p><strong>执行命令：</strong> </p>
     <pre>pytest -q --cov=app --cov-report=term-missing</pre>
-    <p><strong>实测结果：512 条用例全部通过，整体覆盖率 93%（TOTAL 5704 语句 / 392 未覆盖）。</strong> </p>
+    <p><strong>实测结果：531 条用例全部通过，整体覆盖率 93%（TOTAL 5806 语句 / 394 未覆盖）。</strong> </p>
     <p>测试夹具（<code>tests/conftest.py</code>）在导入应用前先设置环境变量（独立测试数据库、<code>DIFY_MODE=mock</code>、32 字节以上密钥），确保测试过程不触碰开发数据库、不发起外部网络请求。数据库使用会话级夹具，在测试会话开始时整体重建并灌入种子数据。</p>
     <p><strong>覆盖率的分布说明：</strong> </p>
     <table>
@@ -682,6 +682,8 @@ pip install -r requirements.txt</pre>
       </thead>
       <tbody>
         <tr><td><code>app/api/v1/notice.py</code></td><td>100%</td><td>通知与消息中心接口</td></tr>
+        <tr><td><code>app/services/crypto.py</code></td><td>100%</td><td>敏感字段加密（打码展示 + 密文存储 + HMAC 检索）</td></tr>
+        <tr><td><code>app/services/content_safety.py</code></td><td>100%</td><td>内容安全（PII 打码放行 + 违禁拦截）</td></tr>
         <tr><td><code>app/api/v1/router.py</code></td><td>100%</td><td>路由挂载</td></tr>
         <tr><td><code>app/main.py</code></td><td>100%</td><td>应用装配</td></tr>
         <tr><td><code>app/models.py</code></td><td>100%</td><td>数据模型定义</td></tr>
@@ -771,7 +773,7 @@ python scripts/smoke_test.py --base http://127.0.0.1:8010</pre>
         <tr><th>验收项</th><th>标准</th><th>实测</th><th>结论</th></tr>
       </thead>
       <tbody>
-        <tr><td>单元/集成测试</td><td>全部通过</td><td>512 / 512 通过</td><td>通过</td></tr>
+        <tr><td>单元/集成测试</td><td>全部通过</td><td>531 / 531 通过</td><td>通过</td></tr>
         <tr><td>代码覆盖率</td><td>≥ 80%</td><td>93%</td><td>通过</td></tr>
         <tr><td>端到端冒烟测试</td><td>全部通过</td><td>149 / 149 通过</td><td>通过</td></tr>
         <tr><td>前端端到端（真浏览器）</td><td>全部通过</td><td>37 / 37 通过，0 页面异常</td><td>通过</td></tr>
@@ -785,7 +787,7 @@ python scripts/smoke_test.py --base http://127.0.0.1:8010</pre>
   <div class="chapter" id="section-9">
     <h2>九、已知限制与后续演进</h2>
     <h3>（一）已知限制</h3>
-    <ol><li><strong>Dify <code>live</code> 模式已打通，但尚未纳入自动化回归。</strong> 本机已部署真实 Dify 实例，完成 7 个应用的接线与逐分支联调，并针对跨应用会话、跨角色越权、知识库命中三类场景做了实测；但该分支依赖外部实例与云端模型服务，未进入日常测试链路。日常回归仍由 mock 分支保证可测性（512 条用例全部离线通过）。建议在预发环境把它做成定期集成验证。</li><li><strong>NL2SQL 的模板式方案覆盖面有限。</strong> 当前仅支持 8 类预置查询，超出范围的提问无法应答。这是安全性与灵活性的主动取舍——若后续需要扩展，建议以"新增模板"而非"开放自由生成"的方式演进。</li><li><strong>ASR 采用规则抽取槽位。</strong> 轻量正则对句式变化敏感，复杂表达可能抽取不全。若实际使用中召回不足，应切换到模型抽取方案。</li><li><strong>无数据库迁移版本管理。</strong> 当前依赖 ORM 元数据自动建表，字段变更需人工处理。生产环境建议尽早引入 Alembic。</li><li><strong>未接入限流与熔断。</strong> 当前仅有超时与重试，缺少按用户/IP 的限流与上游熔断保护。</li></ol>
+    <ol><li><strong>Dify <code>live</code> 模式已打通，但尚未纳入自动化回归。</strong> 本机已部署真实 Dify 实例，完成 7 个应用的接线与逐分支联调，并针对跨应用会话、跨角色越权、知识库命中三类场景做了实测；但该分支依赖外部实例与云端模型服务，未进入日常测试链路。日常回归仍由 mock 分支保证可测性（531 条用例全部离线通过）。建议在预发环境把它做成定期集成验证。</li><li><strong>NL2SQL 的模板式方案覆盖面有限。</strong> 当前仅支持 8 类预置查询，超出范围的提问无法应答。这是安全性与灵活性的主动取舍——若后续需要扩展，建议以"新增模板"而非"开放自由生成"的方式演进。</li><li><strong>ASR 采用规则抽取槽位。</strong> 轻量正则对句式变化敏感，复杂表达可能抽取不全。若实际使用中召回不足，应切换到模型抽取方案。</li><li><strong>无数据库迁移版本管理。</strong> 当前依赖 ORM 元数据自动建表，字段变更需人工处理。生产环境建议尽早引入 Alembic。</li><li><strong>未接入限流与熔断。</strong> 当前仅有超时与重试，缺少按用户/IP 的限流与上游熔断保护。</li></ol>
     <h3>（二）后续演进建议</h3>
     <ol><li>引入 Alembic 管理数据库迁移，消除字段变更风险。</li><li>为 <code>/api/v1/chat/*</code> 与 <code>/api/v1/nl2sql/query</code> 增加限流，防止资源滥用。</li><li>在预发环境建立 <code>DIFY_MODE=live</code> 的定期集成验证，把上方限制 1 的缺口补上。</li><li>将 ASR 槽位抽取从规则升级为模型抽取，提升自然表达的召回。</li><li>基于 <code>audit_log</code> 建立运营看板，把审计数据转化为可用洞察。</li></ol>
   </div>
@@ -831,7 +833,7 @@ docker compose up -d --build</pre>
         <tr><td>报告口径数</td><td>5 类（customer_ops / daily_digest / weekly_digest / mental_weekly / complaint_weekly）</td><td><code>app/services/reports.py</code></td></tr>
         <tr><td>报告导出格式</td><td>4 种（xlsx / pdf / print / md）</td><td><code>app/services/reports.py</code></td></tr>
         <tr><td>待办类别数</td><td>5 类（approval / ticket / followup / screening_review / mental_alert）</td><td><code>app/services/todo.py</code></td></tr>
-        <tr><td>单元测试</td><td>512 条，覆盖率 93%</td><td><code>tests/</code></td></tr>
+        <tr><td>单元测试</td><td>531 条，覆盖率 93%</td><td><code>tests/</code></td></tr>
         <tr><td>冒烟测试</td><td>149 条，全部通过</td><td><code>scripts/smoke_test.py</code></td></tr>
         <tr><td>前端 E2E</td><td>37 条，全部通过</td><td><code>scripts/frontend_e2e.mjs</code></td></tr>
         <tr><td>环境变量</td><td>34 项</td><td><code>app/config.py</code></td></tr>

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from fastapi import (APIRouter, Depends, File, Form, Query, Request,
                      UploadFile)
 from fastapi.responses import FileResponse
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ...config import settings
@@ -20,7 +20,7 @@ from ...models import CustomerFollowup, CustomerLead, LeadScreening, ScreeningRu
 from ...schemas import (BatchScreeningItem, BatchScreeningRequest,
                         FollowupCreate, LeadCreate, LeadStatusUpdate,
                         RuleImportRequest, ScreeningRequest, ScreeningReviewRequest)
-from ...services import audit, material, rules
+from ...services import audit, crypto, material, rules
 from ...services.dify import APP_SCREENER, dify_client
 from ..deps import Principal, client_ip, get_principal, require_roles
 
@@ -48,18 +48,25 @@ def _visible_lead(db: Session, lead_id: int, principal: Principal) -> CustomerLe
 def create_lead(body: LeadCreate, request: Request,
                 principal: Principal = Depends(staff_only),
                 db: Session = Depends(get_db)) -> dict:
-    exists = db.query(CustomerLead).filter(CustomerLead.phone == body.phone).first()
+    # 查重兼容「密文行 + 历史明文行」并存：开启加密后按 HMAC 匹配新行、
+    # 按明文全号匹配老行；关闭加密时就是原来的等值匹配。
+    dup_cond = CustomerLead.phone == body.phone
+    if crypto.enabled():
+        dup_cond = or_(crypto.lookup_condition(body.phone), dup_cond)
+    exists = db.query(CustomerLead).filter(dup_cond).first()
     if exists:
         raise Conflict(f"手机号 {body.phone} 已存在意向客户记录（id={exists.id}）")
 
     lead = CustomerLead(**body.model_dump())
     if lead.owner_id is None and principal.ref_id:
         lead.owner_id = principal.ref_id
+    # 字段级加密：开启后库里存「打码值 + HMAC + 密文」，明文不落库
+    lead.phone, lead.phone_hash, lead.phone_enc = crypto.apply_phone(body.phone)
     db.add(lead)
     db.flush()
     audit.record(db, action="lead.create", actor_id=principal.subject, actor_role=principal.role,
                  resource="customer_lead", resource_id=lead.id,
-                 detail={"phone": body.phone}, ip=client_ip(request))
+                 detail={"phone": crypto.display(body.phone)}, ip=client_ip(request))
     db.commit()
     db.refresh(lead)
     return ok({"id": lead.id, "status": lead.status, "owner_id": lead.owner_id})

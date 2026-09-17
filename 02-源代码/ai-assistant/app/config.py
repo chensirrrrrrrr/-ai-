@@ -184,6 +184,13 @@ class Settings(BaseSettings):
     rate_limit_auth_per_min: int = 30        # 登录接口：每 IP 每分钟（防爆破）
     rate_limit_chat_per_min: int = 120       # 对话接口：每账号每分钟（防刷 LLM）
 
+    # ---------- 敏感字段加密（见 services/crypto 的说明） ----------
+    # 为空 = 关闭（手机号按旧口径明文存）；配置 Fernet key 后开启：
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # 开启后新写入的客户手机号在库里是「打码值 + 密文 + HMAC」；存量明文用
+    # `python scripts/encrypt_backfill.py` 一次性回填（先备份库）。
+    field_encryption_key: str = ""
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")

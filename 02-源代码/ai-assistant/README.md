@@ -286,7 +286,7 @@ python scripts/launcher.py --dify-check                # Dify 接线探活（切
 
 | 层 | 结果 | 证据文件 |
 |---|---|---|
-| 单元 / 接口 | **512 passed**，覆盖率 **93%** | `pytest -q` 输出（一键：`scripts/regression.py`） |
+| 单元 / 接口 | **531 passed**，覆盖率 **93%** | `pytest -q` 输出（一键：`scripts/regression.py`） |
 | 起服体检 | **13 / 13** | `launcher.py --selfcheck` |
 | 端到端冒烟 | **149 / 149**（离线 mock 563 ms；接真实 Dify 约 30 s） | `reports/smoke_report.md` |
 | 浏览器 E2E | **37 / 37**，0 页面异常 | `reports/frontend_e2e_report.json` |
