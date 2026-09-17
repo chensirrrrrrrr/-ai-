@@ -19,7 +19,7 @@ from ...config import settings
 from ...core import AppError, ok
 from ...db import get_db
 from ...schemas import ChatRequest
-from ...services import audit, mock_agent
+from ...services import audit, metrics, mock_agent, ratelimit
 from ...services.asr import get_asr_provider
 from ...services.dify import chunk_text, dify_client
 from ...services.intent import route
@@ -63,7 +63,14 @@ async def chat_message(body: ChatRequest, request: Request,
     role = principal.role
     user = f"{settings.dify_user_prefix}-{principal.subject}"
 
+    # 对话防刷：每账号每分钟 N 次（阈值见 RATE_LIMIT_CHAT_PER_MIN）。LLM 调用是
+    # 全链路最贵的资源，这道闸放在意图路由之前 —— 被限的请求一次模型调用都不花。
+    if settings.rate_limit_enabled:
+        ratelimit.enforce("chat", principal.subject, settings.rate_limit_chat_per_min)
+
     intent = await route(body.message, role, user)
+    metrics.record_chat(intent.action, intent.intent, intent.confidence,
+                        intent.route_source)
 
     if intent.action == "clarify":
         audit.record(db, action="chat.clarify", actor_id=principal.subject, actor_role=role,
@@ -118,7 +125,12 @@ async def chat_stream(body: ChatRequest, principal: Principal = Depends(get_prin
                       db: Session = Depends(get_db)) -> StreamingResponse:
     role = principal.role
     user = f"{settings.dify_user_prefix}-{principal.subject}"
+    # 流式与普通消息同一个限流桶（按账号计），防绕过 /chat/message 直接刷 /chat/stream
+    if settings.rate_limit_enabled:
+        ratelimit.enforce("chat", principal.subject, settings.rate_limit_chat_per_min)
     intent = await route(body.message, role, user)
+    metrics.record_chat(intent.action, intent.intent, intent.confidence,
+                        intent.route_source)
 
     async def event_stream():
         # 先把路由结果推给前端，便于边展示边渲染

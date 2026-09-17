@@ -13,7 +13,7 @@ from ...core import (AppError, Forbidden, Unauthorized, create_access_token,
 from ...db import get_db
 from ...models import SysAccount
 from ...schemas import TokenRequest
-from ...services import audit
+from ...services import audit, metrics, ratelimit
 from ..deps import Principal, client_ip, get_principal
 
 router = APIRouter(tags=["system"])
@@ -42,6 +42,8 @@ def health(db: Session = Depends(get_db)) -> dict:
         "dify_key_count": len([n for n in DIFY_APP_NAMES if settings.dify_key(n)]),
         "dify_missing_keys": settings.dify_missing_keys,
         "asr_provider": settings.asr_provider,
+        # 进程内监控指标（请求量/错误/p95 + 对话意图命中 + 限流拒绝），见 services/metrics
+        "metrics": metrics.snapshot(),
     })
 
 
@@ -57,6 +59,10 @@ def ready(db: Session = Depends(get_db)) -> dict:
 
 @router.post("/auth/token", summary="账号密码换取 JWT")
 def issue_token(body: TokenRequest, request: Request, db: Session = Depends(get_db)) -> dict:
+    # 登录防爆破：每 IP 每分钟 N 次（阈值见 RATE_LIMIT_AUTH_PER_MIN）。
+    # 放在密码校验**之前** —— 爆破者拿不到任何「用户名是否存在」的信息。
+    if settings.rate_limit_enabled:
+        ratelimit.enforce("auth", client_ip(request), settings.rate_limit_auth_per_min)
     account = db.query(SysAccount).filter(SysAccount.username == body.username).first()
     if account is None or not verify_password(body.password, account.password_hash):
         raise Unauthorized("用户名或密码错误")

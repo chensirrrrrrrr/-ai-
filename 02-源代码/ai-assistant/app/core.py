@@ -65,6 +65,7 @@ CODE_NOT_FOUND = 40400
 CODE_CONFLICT = 40900
 CODE_UPSTREAM = 50200
 CODE_INTERNAL = 50000
+CODE_TOO_MANY = 42900
 
 
 class AppError(Exception):
@@ -102,6 +103,14 @@ class Conflict(AppError):
 class UpstreamError(AppError):
     def __init__(self, message: str = "上游服务异常") -> None:
         super().__init__(message, CODE_UPSTREAM, 502)
+
+
+class TooManyRequests(AppError):
+    """限流命中（429）。data.retry_after 告诉调用方多久后再来。"""
+
+    def __init__(self, message: str = "请求过于频繁", retry_after: int = 60) -> None:
+        super().__init__(message, CODE_TOO_MANY, 429, data={"retry_after": retry_after})
+        self.retry_after = retry_after
 
 
 def register_exception_handlers(app: FastAPI) -> None:

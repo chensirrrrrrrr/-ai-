@@ -26,6 +26,10 @@ os.environ["ASR_PROVIDER"] = "mock"
 os.environ["SECRET_KEY"] = "test-secret-key-0123456789abcdefghijklmn"
 os.environ["DEBUG"] = "true"
 os.environ["NL2SQL_MAX_ROWS"] = "50"
+# 限流阈值在测试里调到「实际上不限」，避免既有用例（大量登录/对话）被 429 误伤；
+# 限流本身的分支行为由 test_rate_limit_metrics.py 单独压低阈值来测。
+os.environ["RATE_LIMIT_AUTH_PER_MIN"] = "100000"
+os.environ["RATE_LIMIT_CHAT_PER_MIN"] = "100000"
 
 import pytest                                                    # noqa: E402
 from fastapi.testclient import TestClient                         # noqa: E402

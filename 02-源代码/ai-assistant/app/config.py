@@ -179,6 +179,11 @@ class Settings(BaseSettings):
     # ---------- 写操作二次确认（SRS 4.3.4） ----------
     pending_action_ttl_seconds: int = 300     # 确认令牌有效期，过期需重新发起
 
+    # ---------- 限流（进程内滑动窗口，见 services/ratelimit 的说明） ----------
+    rate_limit_enabled: bool = True
+    rate_limit_auth_per_min: int = 30        # 登录接口：每 IP 每分钟（防爆破）
+    rate_limit_chat_per_min: int = 120       # 对话接口：每账号每分钟（防刷 LLM）
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")

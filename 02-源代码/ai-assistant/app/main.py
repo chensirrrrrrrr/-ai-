@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.v1.router import api_router, internal_router
 from .config import settings
 from .core import new_trace_id, ok, register_exception_handlers, set_trace_id
-from .services import scheduler as scheduler_service
+from .services import metrics, scheduler as scheduler_service
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
@@ -62,6 +62,11 @@ def create_app() -> FastAPI:
             logger.info("%s %s -> %s (%.1fms) trace=%s",
                         request.method, request.url.path,
                         response.status_code, cost_ms, trace_id)
+        # 监控指标（/health 的 metrics 字段）：路径数字段折叠，防计数 key 无限膨胀
+        if request.url.path.endswith("/chat/message") and response.status_code < 400:
+            metrics.record_chat_latency(cost_ms)
+        metrics.record_request(request.method, request.url.path,
+                               response.status_code, cost_ms)
         return response
 
     register_exception_handlers(app)
