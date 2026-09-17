@@ -14,7 +14,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ...config import settings
-from ...core import AppError, Conflict, NotFound, ok
+from ...core import AppError, Conflict, Forbidden, NotFound, ok
 from ...db import get_db
 from ...models import CustomerFollowup, CustomerLead, LeadScreening, ScreeningRule
 from ...schemas import (BatchScreeningItem, BatchScreeningRequest,
@@ -28,6 +28,20 @@ router = APIRouter(tags=["crm"])
 
 staff_only = require_roles("employee", "manager", "admin")
 manager_only = require_roles("manager", "admin")
+
+
+def _visible_lead(db: Session, lead_id: int, principal: Principal) -> CustomerLead:
+    """行级可见性：manager / admin 全量；employee 只能碰**自己名下**的客户。
+
+    鉴权（能不能进这个接口）由 `staff_only` 保证；这里补的是**数据级**隔离 ——
+    拿到合法 Token 的普通员工，也不能靠猜 ID 翻到别人的客户与跟进记录。
+    """
+    lead = db.get(CustomerLead, lead_id)
+    if lead is None:
+        raise NotFound(f"意向客户 {lead_id} 不存在")
+    if not principal.is_manager and lead.owner_id != principal.ref_id:
+        raise Forbidden(f"意向客户 {lead_id} 不在你的名下，无权访问")
+    return lead
 
 
 @router.post("/leads", summary="新增意向客户")
@@ -64,7 +78,11 @@ def list_leads(status: Optional[str] = None,
         query = query.filter(CustomerLead.status == status)
     if keyword:
         query = query.filter(CustomerLead.name.like(f"%{keyword}%"))
-    if owner_id:
+    if not principal.is_manager:
+        # 行级过滤：普通员工只能看自己名下的客户，owner_id 检索条件对员工强制收敛为自己
+        # （manager / admin 才允许按 owner_id 查别人的）。
+        query = query.filter(CustomerLead.owner_id == principal.ref_id)
+    elif owner_id:
         query = query.filter(CustomerLead.owner_id == owner_id)
 
     total = query.count()
@@ -82,9 +100,7 @@ def list_leads(status: Optional[str] = None,
 @router.get("/leads/{lead_id}", summary="意向客户详情")
 def get_lead(lead_id: int, principal: Principal = Depends(staff_only),
              db: Session = Depends(get_db)) -> dict:
-    lead = db.get(CustomerLead, lead_id)
-    if lead is None:
-        raise NotFound(f"意向客户 {lead_id} 不存在")
+    lead = _visible_lead(db, lead_id, principal)
     followups = (db.query(CustomerFollowup)
                  .filter(CustomerFollowup.lead_id == lead_id)
                  .order_by(CustomerFollowup.created_at.desc()).all())
@@ -102,9 +118,7 @@ def get_lead(lead_id: int, principal: Principal = Depends(staff_only),
 def update_lead_status(lead_id: int, body: LeadStatusUpdate, request: Request,
                        principal: Principal = Depends(staff_only),
                        db: Session = Depends(get_db)) -> dict:
-    lead = db.get(CustomerLead, lead_id)
-    if lead is None:
-        raise NotFound(f"意向客户 {lead_id} 不存在")
+    lead = _visible_lead(db, lead_id, principal)
     before = lead.status
     lead.status = body.status
     if body.remark:
@@ -120,9 +134,7 @@ def update_lead_status(lead_id: int, body: LeadStatusUpdate, request: Request,
 def add_followup(lead_id: int, body: FollowupCreate, request: Request,
                  principal: Principal = Depends(staff_only),
                  db: Session = Depends(get_db)) -> dict:
-    lead = db.get(CustomerLead, lead_id)
-    if lead is None:
-        raise NotFound(f"意向客户 {lead_id} 不存在")
+    lead = _visible_lead(db, lead_id, principal)
 
     if body.idempotency_key:
         dup = (db.query(CustomerFollowup)
@@ -152,6 +164,7 @@ def add_followup(lead_id: int, body: FollowupCreate, request: Request,
 @router.get("/leads/{lead_id}/followups", summary="查询某客户的跟进记录")
 def list_followups(lead_id: int, principal: Principal = Depends(staff_only),
                    db: Session = Depends(get_db)) -> dict:
+    _visible_lead(db, lead_id, principal)      # 员工只能看自己客户的跟进
     rows = (db.query(CustomerFollowup)
             .filter(CustomerFollowup.lead_id == lead_id)
             .order_by(CustomerFollowup.created_at.desc()).all())
@@ -324,8 +337,8 @@ async def _screen_one(db: Session, principal: Principal, *,
     3. Dify 的结论**不丢弃**：与规则引擎不一致时作为一条 evidence 记下来，
        这正是下一版规则该重点看的地方（和 `/screening/corrections` 一个思路）。
     """
-    if lead_id is not None and db.get(CustomerLead, lead_id) is None:
-        raise NotFound(f"意向客户 {lead_id} 不存在")
+    if lead_id is not None:
+        _visible_lead(db, lead_id, principal)
 
     resolved_text, resolved_name, warnings = _resolve_text(
         source_type, text, raw_file_url, source_name)
@@ -415,8 +428,8 @@ async def upload_material(request: Request,
     """
     filename = file.filename or "material"
     content = await file.read()
-    if lead_id is not None and db.get(CustomerLead, lead_id) is None:
-        raise NotFound(f"意向客户 {lead_id} 不存在")
+    if lead_id is not None:
+        _visible_lead(db, lead_id, principal)
 
     result = material.parse_material(filename, content)
     rel_path = _store_material(filename, content)
@@ -449,7 +462,8 @@ def download_material(rel_path: str,
     return FileResponse(target, filename=_original_name(target.name))
 
 
-def _items_from_leads(db: Session, lead_ids: List[int]) -> List[BatchScreeningItem]:
+def _items_from_leads(db: Session, lead_ids: List[int],
+                      principal: Principal) -> List[BatchScreeningItem]:
     """按客户档案 + 最近 3 条跟进拼出材料正文。
 
     刻意放服务端：档案里的意向国家/阶段/来源正是研判最需要的输入，
@@ -457,9 +471,7 @@ def _items_from_leads(db: Session, lead_ids: List[int]) -> List[BatchScreeningIt
     """
     items: List[BatchScreeningItem] = []
     for lead_id in lead_ids:
-        lead = db.get(CustomerLead, lead_id)
-        if lead is None:
-            raise NotFound(f"意向客户 {lead_id} 不存在")
+        lead = _visible_lead(db, lead_id, principal)
         parts = [
             f"客户姓名：{lead.name}",
             f"意向国家：{lead.intention_country or '未填写'}",
@@ -490,7 +502,7 @@ async def batch_analyze(body: BatchScreeningRequest, request: Request,
     """
     items: List[BatchScreeningItem] = list(body.items or [])
     if body.lead_ids:
-        items.extend(_items_from_leads(db, body.lead_ids))
+        items.extend(_items_from_leads(db, body.lead_ids, principal))
     if not items:
         raise AppError("批量研判至少要给一条材料（items）或一个客户（lead_ids）")
     if len(items) > settings.screening_batch_max:

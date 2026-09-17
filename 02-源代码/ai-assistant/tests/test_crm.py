@@ -408,3 +408,45 @@ def test_screening_list_filters_and_aggregates_review_status(client, advisor_hea
     assert all(item["review_status"] == "OVERRIDDEN" for item in body["items"])
     assert body["by_review_status"]["OVERRIDDEN"] >= 1
     assert "pending_review" in body
+
+
+def test_lead_row_level_isolation(client, advisor_headers, teacher_headers, manager_headers):
+    """行级隔离：employee 只能碰自己名下的客户，manager / admin 全量。
+
+    补这条的背景：此前鉴权只挡了「能不能进接口」（staff_only），
+    拿到合法 Token 的普通员工仍能靠猜 ID 翻到别人的客户与跟进记录。
+    """
+    lead_id = data(client.post("/api/v1/leads", headers=advisor_headers,
+                               json={"name": "越权隔离客户",
+                                     "phone": "135" + uuid.uuid4().hex[:8]}))["id"]
+
+    # 列表：advisor 只见自己名下；强行按别人的 owner_id 查也被收敛回自己
+    mine = data(client.get("/api/v1/leads", headers=advisor_headers))
+    assert mine["total"] >= 1
+    assert all(item["owner_id"] == 1 for item in mine["items"])
+    forced = data(client.get("/api/v1/leads", params={"owner_id": 2}, headers=advisor_headers))
+    assert all(item["owner_id"] == 1 for item in forced["items"])
+
+    # teacher（employee, ref_id=2）拿合法 Token 也翻不到 advisor 的客户
+    assert client.get(f"/api/v1/leads/{lead_id}", headers=teacher_headers).status_code == 403
+    assert client.get(f"/api/v1/leads/{lead_id}/followups",
+                      headers=teacher_headers).status_code == 403
+    assert client.patch(f"/api/v1/leads/{lead_id}/status", json={"status": "SIGNED"},
+                        headers=teacher_headers).status_code == 403
+    assert client.post(f"/api/v1/leads/{lead_id}/followups", headers=teacher_headers,
+                       json={"content": "越权跟进"}).status_code == 403
+    assert client.post("/api/v1/screening/analyze", headers=teacher_headers,
+                       json={"source_type": "TEXT", "text": "本科，GPA 3.5",
+                             "lead_id": lead_id}).status_code == 403
+    assert client.post("/api/v1/screening/batch", headers=teacher_headers,
+                       json={"lead_ids": [lead_id]}).status_code == 403
+    t_list = data(client.get("/api/v1/leads", headers=teacher_headers))
+    assert all(item["owner_id"] == 2 for item in t_list["items"])
+
+    # manager / admin 全量可见
+    m_list = data(client.get("/api/v1/leads", headers=manager_headers))
+    assert m_list["total"] >= mine["total"]
+    assert any(item["id"] == lead_id for item in m_list["items"])
+
+    # 自己名下的读写不受影响
+    assert data(client.get(f"/api/v1/leads/{lead_id}", headers=advisor_headers))["lead"]["id"] == lead_id

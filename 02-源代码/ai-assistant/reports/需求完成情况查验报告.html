@@ -49,7 +49,7 @@ strong{font-weight:600}
 <h1>项目需求完成情况查验报告</h1>
 <ul><li><strong>查验对象</strong>：<code>ai-assistant</code>（留学机构 AI 智能助手系统）</li><li><strong>项目根（主目录）</strong>：<code>C:\Users\机械革命\Desktop\留学机构AI助手系统_交付\02-源代码\ai-assistant\</code></li></ul>
 <p>（原 <code>2026-09-12-11-04-16\</code> 已不存在）</p>
-<ul><li><strong>查验依据</strong>：<code>客户需求表.xlsx</code>（客户需求页 / 开发计划页）、<code>AI智能助手系统_需求规格说明书.docx</code>（SRS V1.0）、<code>AI智能助手系统_技术方案设计文档.docx</code>（TDD V1.0）</li><li><strong>查验方式</strong>：静态比对（源码 / 模型 / 路由 / 配置 / 部署件）+ 实测（pytest、一键自检、冒烟、E2E）</li><li><strong>查验时间</strong>：2026-09-15（<strong>2026-09-16 复测</strong>：Dify 切 live 后全量重跑，基线升至 pytest 415 / E2E 37；<strong>2026-09-17 清理死代码并补测后</strong>为 pytest 440 / 覆盖率 90%；<strong>同日再收口低覆盖模块后</strong>为 pytest 472 / 覆盖率 91%；<strong>补工具层分支后</strong>为 pytest 502 / 覆盖率 93%）</li></ul>
+<ul><li><strong>查验依据</strong>：<code>客户需求表.xlsx</code>（客户需求页 / 开发计划页）、<code>AI智能助手系统_需求规格说明书.docx</code>（SRS V1.0）、<code>AI智能助手系统_技术方案设计文档.docx</code>（TDD V1.0）</li><li><strong>查验方式</strong>：静态比对（源码 / 模型 / 路由 / 配置 / 部署件）+ 实测（pytest、一键自检、冒烟、E2E）</li><li><strong>查验时间</strong>：2026-09-15（<strong>2026-09-16 复测</strong>：Dify 切 live 后全量重跑，基线升至 pytest 415 / E2E 37；<strong>2026-09-17 清理死代码并补测后</strong>为 pytest 440 / 覆盖率 90%；<strong>同日再收口低覆盖模块后</strong>为 pytest 472 / 覆盖率 91%；<strong>补工具层分支后</strong>为 pytest 502 / 覆盖率 93%；<strong>补客户行级隔离后</strong>为 pytest 503 / 覆盖率 93%）</li></ul>
 <hr>
 <h2>修复进展（同日 20:2x 复核；2026-09-16 补充 Dify live 收口）</h2>
 <blockquote><p>本文档下方主体为<strong>首次查验（19:49）</strong>的原始记录。查验后已按结论推进修复，下列空档<strong>已闭环</strong>，</p></blockquote>
@@ -67,7 +67,7 @@ strong{font-weight:600}
 <tr><td>研判结论抖动 / <code>intent</code> 返回整句</td><td>✅ 已修复（09-16）</td><td>规则表回填（<code>seed.py</code> 补判空守卫）→ <code>rule_source=local</code> 确定；router 的 <code>intent</code> 加 17 值 enum + 提示词约束</td></tr>
 <tr><td><code>smoke_test.py</code> 默认端口与 launcher 漂移</td><td>✅ 已修复（09-16）</td><td><code>--base</code> 改自动发现，新增 <code>tests/test_port_contract.py</code>（8 条）守护</td></tr>
 </tbody></table>
-<p><strong>复核实测</strong>：pytest <strong>502/502</strong>（09-16 为 415，09-17 三轮补测后 502；覆盖率 93%） · 一键自检 <strong>13/13</strong> · 冒烟 <strong>149/149</strong> · 浏览器 E2E <strong>37/37</strong> · Dify 接线 <strong>7/7 [OK]</strong>。</p>
+<p><strong>复核实测</strong>：pytest <strong>503/503</strong>（09-16 为 415，09-17 四轮补测后 503；覆盖率 93%） · 一键自检 <strong>13/13</strong> · 冒烟 <strong>149/149</strong> · 浏览器 E2E <strong>37/37</strong> · Dify 接线 <strong>7/7 [OK]</strong>。</p>
 <p><strong>仍未闭环</strong>（属生产化非功能能力，非本次修复范围）：HTTPS、字段级加密（<code>customer_lead.phone</code> 明文）、限流熔断、</p>
 <p>内容安全过滤、监控看板、撤销机制、渠道接入（企微 / 公众号 / 小程序）、CI/CD、Redis 会话记忆、</p>
 <p>向量库 / RAG / Rerank、Prompt 版本化；<code>GET /leads</code> 仍无行级过滤（角色级权限）。</p>
@@ -281,7 +281,7 @@ strong{font-weight:600}
 <table>
 <thead><tr><th>项目</th><th>本次实测值</th><th>复验命令</th></tr></thead>
 <tbody>
-<tr><td>单元/集成测试</td><td><strong>502 / 502 通过</strong>（2026-09-17 复核；09-16 为 415，09-17 三轮补测后 502；首次查验为 320/320）</td><td><code>pytest -q</code></td></tr>
+<tr><td>单元/集成测试</td><td><strong>503 / 503 通过</strong>（2026-09-17 复核；09-16 为 415，09-17 四轮补测后 503；首次查验为 320/320）</td><td><code>pytest -q</code></td></tr>
 <tr><td>一键自检</td><td><strong>13 / 13 通过</strong>（起服→体检→收服，19:48 实跑）</td><td><code>python scripts/launcher.py --selfcheck</code></td></tr>
 <tr><td>HTTP 冒烟</td><td><strong>149 / 149 通过</strong>，累计 825ms（19:48 实跑，报告已刷新）</td><td><code>start.bat --smoke</code></td></tr>
 <tr><td>浏览器 E2E</td><td><strong>37 / 37 通过</strong>，0 页面异常</td><td><code>node scripts/frontend_e2e.mjs</code></td></tr>
