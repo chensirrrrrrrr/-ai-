@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="docx-page-size" content="A4">
+  <title>留学机构 AI 智能助手系统 —— 技术实现与部署文档</title>
+  <style>
+  :root {
+    /* ===== Design Tokens (modern-minimal) ===== */
+    --typography-fontFamily-heading: PingFang SC, 苹方-简, 微软雅黑, sans-serif;
+    --typography-fontFamily-body: PingFang SC, 苹方-简, 微软雅黑, sans-serif;
+    --typography-fontFamily-bodyLatin: Inter, Helvetica Neue, Arial, sans-serif;
+    --typography-fontFamily-code: JetBrains Mono, Fira Code, Consolas, monospace;
+    --typography-fontSize-title: 24pt;
+    --typography-fontSize-h1: 18pt;
+    --typography-fontSize-h2: 15pt;
+    --typography-fontSize-h3: 13pt;
+    --typography-fontSize-body: 11pt;
+    --typography-fontSize-small: 9pt;
+    --typography-fontSize-caption: 9pt;
+    --typography-lineHeight-title: 1.4;
+    --typography-lineHeight-body: 1.7;
+    --typography-lineHeight-heading: 1.3;
+    --typography-fontWeight-heading: 600;
+    --typography-fontWeight-body: 400;
+    --color-primary: #2563EB;
+    --color-text: #111827;
+    --color-textSecondary: #6B7280;
+    --color-heading: #111827;
+    --color-border: #E5E7EB;
+    --color-divider: #F3F4F6;
+    --color-background: #FFFFFF;
+    --color-codeBackground: #F9FAFB;
+    --color-highlight: #FEF3C7;
+    /* 间距刻度 */
+    --spacing-xxs: 0.25em;
+    --spacing-2xs: 0.3em;
+    --spacing-xs: 0.35em;
+    --spacing-sm: 0.4em;
+    --spacing-paragraph: 0.5em;
+    --spacing-paragraphAfter: 0.5em;
+    --spacing-lg: 0.6em;
+    --spacing-xl: 0.7em;
+    --spacing-2xl: 0.8em;
+    --spacing-3xl: 0.9em;
+    --spacing-4xl: 1.2em;
+    --spacing-5xl: 1.6em;
+    --spacing-sectionGap: 2em;
+    --spacing-6xl: 2.4em;
+    --spacing-7xl: 3em;
+    --spacing-listItemGap: 0.4em;
+    --layout-marginTop: 2.5cm;
+    --layout-marginBottom: 2.0cm;
+    --layout-marginLeft: 2.5cm;
+    --layout-marginRight: 2.5cm;
+    --layout-pageSize: A4;
+    --layout-coverPaddingTop: 4cm;
+
+    /* ===== 本地别名 ===== */
+    --fs-title: var(--typography-fontSize-title);
+    --fs-h1: var(--typography-fontSize-h1);
+    --fs-h2: var(--typography-fontSize-h2);
+    --fs-h3: var(--typography-fontSize-h3);
+    --fs-body: var(--typography-fontSize-body);
+    --fs-small: var(--typography-fontSize-small);
+    --fs-caption: var(--typography-fontSize-caption);
+    --ff-heading: var(--typography-fontFamily-heading);
+    --ff-body: var(--typography-fontFamily-body);
+    --ff-mono: var(--typography-fontFamily-code);
+    --lh-body: var(--typography-lineHeight-body);
+    --lh-heading: var(--typography-lineHeight-heading);
+    --lh-title: var(--typography-lineHeight-title);
+    --lh-code: var(--typography-lineHeight-heading);
+    --fw-bold: var(--typography-fontWeight-heading);
+    --fw-normal: var(--typography-fontWeight-body);
+    --color-muted: var(--color-textSecondary);
+    --color-bg: var(--color-background);
+    --color-code-bg: var(--color-codeBackground);
+    --color-table-head: var(--color-divider);
+    --spacing-md: var(--spacing-paragraph);
+    --spacing-section: var(--spacing-sectionGap);
+    --spacing-block: var(--spacing-paragraphAfter);
+    --margin-page: var(--layout-marginTop);
+    --page-content-width: 15.6cm;
+    --border-rule: 1px solid var(--color-border);
+    --border-accent: 3px solid var(--color-primary);
+  }
+
+  * { box-sizing: border-box; }
+
+  @page { @bottom-center { content: counter(page); } }
+  @page cover { @bottom-center { content: none; } }
+  section[role="cover"] { page: cover; }
+
+  body {
+    font-family: var(--ff-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+    max-width: var(--page-content-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  section[role="cover"] { padding-top: var(--layout-coverPaddingTop); }
+
+  .cover-eyebrow {
+    text-align: center;
+    font-family: var(--ff-heading);
+    font-size: var(--fs-small);
+    font-weight: var(--fw-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-4xl);
+  }
+  section[role="cover"] > h1 {
+    text-align: center;
+    font-family: var(--ff-heading);
+    font-size: var(--fs-title);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-title);
+    color: var(--color-heading);
+    margin-bottom: var(--spacing-lg);
+  }
+  .cover-subtitle {
+    text-align: center;
+    font-size: var(--fs-h3);
+    color: var(--color-muted);
+    margin-bottom: var(--spacing-6xl);
+  }
+  .cover-meta {
+    text-align: center;
+    font-size: var(--fs-body);
+    color: var(--color-text);
+    margin-bottom: var(--spacing-sm);
+  }
+  .cover-note {
+    text-align: center;
+    font-size: var(--fs-small);
+    color: var(--color-muted);
+    margin-top: var(--spacing-7xl);
+  }
+
+  h2, h3, h4 {
+    font-family: var(--ff-heading);
+    line-height: var(--lh-heading);
+    font-weight: var(--fw-bold);
+    color: var(--color-heading);
+    margin-top: var(--spacing-section);
+    margin-bottom: var(--spacing-paragraph);
+  }
+  h2 {
+    font-size: var(--fs-h2);
+    padding-bottom: var(--spacing-xxs);
+    border-bottom: var(--border-rule);
+  }
+  h3 { font-size: var(--fs-h3); }
+  h4 { font-size: var(--fs-body); }
+
+  p { margin-bottom: var(--spacing-paragraph); }
+  strong { font-weight: var(--fw-bold); }
+
+  ul, ol { padding-left: var(--spacing-5xl); margin-bottom: var(--spacing-block); }
+  li { margin-bottom: var(--spacing-2xs); }
+
+  table { border-collapse: collapse; width: 100%; margin-bottom: var(--spacing-block); }
+  th, td {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: var(--border-rule);
+    font-size: var(--fs-small);
+  }
+  th { font-weight: var(--fw-bold); background: var(--color-table-head); text-align: left; }
+  caption {
+    font-size: var(--fs-caption);
+    color: var(--color-muted);
+    margin-bottom: var(--spacing-sm);
+    text-align: left;
+  }
+
+  pre {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-small);
+    line-height: var(--lh-code);
+    background: var(--color-code-bg);
+    border: var(--border-rule);
+    padding: var(--spacing-xl) var(--spacing-3xl);
+    margin-bottom: var(--spacing-block);
+    white-space: pre-wrap;
+  }
+  code { font-family: var(--ff-mono); font-size: var(--fs-small); }
+
+  .callout-info {
+    border-left: var(--border-accent);
+    padding: var(--spacing-md) var(--spacing-2xl);
+    margin-bottom: var(--spacing-block);
+  }
+
+  nav.doc-toc {
+    margin-bottom: var(--spacing-section);
+    padding: var(--spacing-2xl) var(--spacing-4xl);
+    background: var(--color-code-bg);
+    border: var(--border-rule);
+  }
+  .toc-title {
+    font-family: var(--ff-heading);
+    font-weight: var(--fw-bold);
+    color: var(--color-heading);
+    margin-bottom: var(--spacing-sm);
+  }
+  .toc-list, .toc-list ol, .toc-list ul {
+    list-style: none;
+    list-style-type: none;
+    padding-left: var(--spacing-indent, 0);
+  }
+  .toc-list li {
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--fs-small);
+  }
+
+  .chapter { margin-bottom: var(--spacing-section); }
+  </style>
+</head>
+<body>
+
+<section role="cover">
+  <p class="cover-eyebrow">技术文档 · TECHNICAL IMPLEMENTATION</p>
+  <h1>留学机构 AI 智能助手系统</h1>
+  <p class="cover-subtitle">技术实现与部署文档</p>
+  <p class="cover-meta">技术栈：Python + FastAPI + Dify(Agent) + MySQL/SQLite</p>
+  <p class="cover-meta">文档类型：技术实现与部署文档</p>
+  <p class="cover-meta">文档版本：V1.0</p>
+  <p class="cover-meta">编写日期：2026 年 9 月</p>
+  <p class="cover-meta">文档状态：已通过测试验收</p>
+  <p class="cover-note">本文档全部数据取自实际运行并通过测试的工程实例</p>
+</section>
+
+<section role="body" data-page-restart="1">
+
+  <nav class="doc-toc" aria-label="文档目录">
+    <p class="toc-title">目录</p>
+    <ol class="toc-list">
+      <li>一、文档说明</li>
+      <li>二、技术选型与总体架构</li>
+      <li>三、运行环境与依赖</li>
+      <li>四、数据模型设计</li>
+      <li>五、核心机制实现</li>
+      <li>六、接口清单</li>
+      <li>七、部署实施</li>
+      <li>八、测试与验收</li>
+      <li>九、已知限制与后续演进</li>
+      <li>附录 A：部署速查</li>
+      <li>附录 B：核心参数速查</li>
+    </ol>
+  </nav>
+
+  <div class="chapter" id="section-1">
+    <h2>一、文档说明</h2>
+    <h3>（一）编写目的</h3>
+    <p>本文档面向研发与运维人员，说明留学机构 AI 智能助手系统的技术实现方式与部署流程。文档中的全部数据（接口数量、数据表数量、测试用例数与通过率、依赖版本号）均取自实际运行并通过测试的工程实例，可直接作为部署与验收依据。</p>
+    <h3>（二）技术范围</h3>
+    <p>本文档所描述的实现严格限定在以下技术栈内：</p>
+    <table>
+      <caption>表 1-1　技术栈与实测版本</caption>
+      <thead>
+        <tr><th>层次</th><th>技术选型</th><th>版本（实测）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>语言</td><td>Python</td><td>3.13.14</td></tr>
+        <tr><td>Web 框架</td><td>FastAPI</td><td>0.141.1</td></tr>
+        <tr><td>ASGI 服务器</td><td>Uvicorn</td><td>0.52.4</td></tr>
+        <tr><td>Agent 编排</td><td>Dify（Chatflow / Workflow / Agent）</td><td>服务端 API v1</td></tr>
+        <tr><td>ORM</td><td>SQLAlchemy</td><td>2.0.52</td></tr>
+        <tr><td>数据校验</td><td>Pydantic / pydantic-settings</td><td>2.13.5 / 2.15.0</td></tr>
+        <tr><td>开发数据库</td><td>SQLite</td><td>内置驱动</td></tr>
+        <tr><td>生产数据库</td><td>MySQL 8</td><td><code>mysql+pymysql</code>，PyMySQL 1.2.0</td></tr>
+        <tr><td>鉴权</td><td>PyJWT（HS256）</td><td>2.13.0</td></tr>
+        <tr><td>测试</td><td>pytest / pytest-cov</td><td>9.1.1 / 7.1.0</td></tr>
+      </tbody>
+    </table>
+    <h3>（三）读者对象</h3>
+    <p>后端开发工程师、运维与 DBA、技术评审与验收人员。</p>
+  </div>
+  <div class="chapter" id="section-2">
+    <h2>二、技术选型与总体架构</h2>
+    <h3>（一）选型理由</h3>
+    <p><strong>Python + FastAPI。</strong> 该系统是一个以对话与数据查询为主的后端服务，天然是 I/O 密集型而非计算密集型。FastAPI 基于 ASGI 异步模型，在等待 Dify 上游返回、等待数据库返回时不会阻塞事件循环；其原生 Pydantic 集成让请求校验、响应序列化与接口文档三件事一次完成，显著降低了契约维护成本。</p>
+    <p><strong>Dify 承担 Agent 编排。</strong> 智能助手系统的核心难点不在于"调用大模型"，而在于意图识别、任务拆解、知识检索、多轮状态管理与业务工具调用。这类逻辑如果写在后端代码里，任何话术调整、提示词迭代、知识库更新都要发版。把编排层交给 Dify 之后，后端只保留三件事：鉴权与权限、业务数据读写、受控数据查询。这样业务人员可以在不改代码的前提下调整 Agent 行为，研发则专注于数据与安全边界。</p>
+    <p><strong>SQLite 与 MySQL 双栈。</strong> SQLite 零配置、单文件、可随代码包分发，适合本地开发、演示与自动化测试；MySQL 8 承担多连接并发、事务隔离与备份恢复的生产职责。两者通过 SQLAlchemy ORM 统一抽象，切换时只改一行数据库连接串。</p>
+    <h3>（二）分层架构</h3>
+    <p>系统在纵向上分为五层，每一层只依赖其下一层：</p>
+    <table>
+      <caption>表 2-1　分层架构与职责</caption>
+      <thead>
+        <tr><th>层次</th><th>组成</th><th>职责</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>接入层</td><td><code>app/main.py</code>、CORS 中间件、Trace 中间件</td><td>请求入口、跨域、链路追踪、全局异常兜底</td></tr>
+        <tr><td>接口层</td><td><code>app/api/v1/*.py</code>、<code>app/api/deps.py</code></td><td>路由定义、依赖注入、参数校验、权限校验</td></tr>
+        <tr><td>服务层</td><td><code>app/services/*.py</code></td><td>意图路由、Dify 调用、ASR、受控 SQL、审计</td></tr>
+        <tr><td>模型层</td><td><code>app/models.py</code>、<code>app/schemas.py</code></td><td>ORM 实体与请求/响应契约</td></tr>
+        <tr><td>数据层</td><td><code>app/db.py</code></td><td>引擎与会话管理、SQLite/MySQL 方言差异处理</td></tr>
+      </tbody>
+    </table>
+    <p><strong>关键设计取舍：</strong> 接口层不直接访问 Dify，也不直接拼 SQL。所有外部依赖都被封装在服务层之后，因此服务层是唯一需要处理"上游失败如何降级"的位置。</p>
+    <h3>（三）请求处理链路</h3>
+    <p>一次典型的对话请求按以下顺序流转：</p>
+    <ol><li>请求进入 Trace 中间件，生成或透传 <code>X-Trace-Id</code>，开始计时。</li><li>FastAPI 依赖注入解析 Bearer Token，得到 <code>Principal</code>（含 <code>user_id</code> 与 <code>role</code>）。</li><li>接口层做参数校验，进入服务层。</li><li>服务层执行<strong>两阶段意图路由</strong>：先用正则/关键词做低成本预筛，命中则直接判定；未命中再调 Dify <code>router</code> 工作流。</li><li>意图路由结果经过<strong>角色白名单收敛</strong>，确定最终由哪个 Dify 应用应答。</li><li>调用对应的 Dify 应用（对话型走 <code>/chat-messages</code>，工作流型走 <code>/workflows/run</code>）。</li><li>若该业务动作为写操作，落库前先查幂等键，落库后写审计日志。</li><li>结果封装为统一响应体返回，响应头回填 <code>X-Process-Time-Ms</code>。</li></ol>
+  </div>
+  <div class="chapter" id="section-3">
+    <h2>三、运行环境与依赖</h2>
+    <h3>（一）Python 依赖清单</h3>
+    <p>生产必需依赖（<code>requirements.txt</code>）：</p>
+    <pre>fastapi&gt;=0.115,&lt;1.0
+uvicorn[standard]&gt;=0.30
+sqlalchemy&gt;=2.0,&lt;3.0
+pydantic&gt;=2.7
+pydantic-settings&gt;=2.3
+httpx&gt;=0.27
+PyJWT&gt;=2.8
+python-multipart&gt;=0.0.9</pre>
+    <p>MySQL 生产环境附加依赖（<code>requirements-mysql.txt</code>）：</p>
+    <pre>PyMySQL&gt;=1.1
+cryptography&gt;=42.0</pre>
+    <p>测试依赖（<code>requirements-dev.txt</code>）：<code>pytest</code>、<code>pytest-cov</code>。</p>
+    <h3>（二）环境变量清单</h3>
+    <p>配置由 <code>app/config.py</code> 中的 <code>Settings</code> 类统一承载，基于 <code>pydantic-settings</code> 从环境变量或 <code>.env</code> 读取，并通过 <code>lru_cache</code> 缓存单例。</p>
+    <table>
+      <caption>表 3-1　环境变量清单</caption>
+      <thead>
+        <tr><th>变量名</th><th>默认值</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>DATABASE_URL</code></td><td><code>sqlite:///./data/ai_assistant.db</code></td><td>数据库连接串，切 MySQL 只需改此项</td></tr>
+        <tr><td><code>SECRET_KEY</code></td><td>开发占位值</td><td>JWT 签名与内部工具 HMAC 的密钥，<strong>生产必须替换为 32 字节以上随机值</strong></td></tr>
+        <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td><code>120</code></td><td>访问令牌有效期（分钟）</td></tr>
+        <tr><td><code>DIFY_MODE</code></td><td><code>mock</code></td><td><code>mock</code> 离线确定性响应；<code>live</code> 真实调用 Dify</td></tr>
+        <tr><td><code>DIFY_BASE_URL</code></td><td><code>http://127.0.0.1/v1</code></td><td>Dify 服务地址</td></tr>
+        <tr><td><code>DIFY_APP_KEYS</code></td><td><code>{}</code></td><td>应用名到 API Key 的映射字典</td></tr>
+        <tr><td><code>DIFY_TIMEOUT</code></td><td><code>30.0</code></td><td>上游调用超时（秒）</td></tr>
+        <tr><td><code>DIFY_MAX_RETRIES</code></td><td><code>2</code></td><td>上游失败重试次数</td></tr>
+        <tr><td><code>DIFY_USER_PREFIX</code></td><td><code>uas</code></td><td>传给 Dify <code>user</code> 字段的前缀，用于终态用户隔离</td></tr>
+        <tr><td><code>ASR_PROVIDER</code></td><td><code>mock</code></td><td><code>mock</code> 或 <code>dify</code></td></tr>
+        <tr><td><code>NL2SQL_MAX_ROWS</code></td><td><code>50</code></td><td>受控查询返回行数上限</td></tr>
+        <tr><td><code>CORS_ORIGINS</code></td><td><code>["*"]</code></td><td>允许的跨域来源，生产应收紧</td></tr>
+      </tbody>
+    </table>
+    <p><strong>配置校验要点：</strong> <code>SECRET_KEY</code> 长度不足 32 字节时，PyJWT 的 HS256 签名会触发安全告警。项目在测试与生产模板中均使用 32 字节以上的密钥，避免带安全隐患上线。</p>
+    <h3>（三）工程目录结构</h3>
+    <pre>ai-assistant/
+├── app/
+│   ├── main.py                 # create_app()：中间件、异常处理、路由挂载
+│   ├── config.py               # Settings 与 get_settings()
+│   ├── core.py                 # 响应封装、异常体系、密码哈希、JWT、HMAC
+│   ├── db.py                   # 引擎构建、会话工厂、方言差异处理
+│   ├── models.py               # 19 张表的 ORM 定义
+│   ├── schemas.py              # 请求/响应 Pydantic 模型
+│   ├── api/
+│   │   ├── deps.py             # get_principal / require_roles / client_ip
+│   │   └── v1/
+│   │       ├── router.py       # 聚合 api_router 与 internal_router
+│   │       ├── system.py       # 健康检查与认证
+│   │       ├── chat.py         # 对话、流式、语音录入
+│   │       ├── crm.py          # 意向客户、跟进、研判
+│   │       ├── student.py      # 学员档案、成绩、申请审批、工单、预警
+│   │       ├── ops.py          # 活动、报告、知识库
+│   │       ├── data.py         # NL2SQL 与审计日志
+│   │       └── tools.py        # Dify 回调的内部工具
+│   └── services/
+│       ├── intent.py           # 两阶段意图路由与权限收敛
+│       ├── dify.py             # DifyClient：对话、流式、工作流、ASR
+│       ├── asr.py              # ASR Provider 抽象与槽位抽取
+│       ├── nl2sql.py           # 受控 SQL：模板、白名单、危险关键字拦截
+│       └── audit.py            # 审计日志写入
+├── scripts/
+│   ├── seed.py                 # 幂等种子数据（支持 --reset）
+│   └── smoke_test.py           # 端到端冒烟测试
+├── tests/                      # pytest 用例与夹具
+├── data/                       # SQLite 数据文件目录
+├── Dockerfile
+├── docker-compose.yml
+├── requirements*.txt
+└── pytest.ini</pre>
+  </div>
+  <div class="chapter" id="section-4">
+    <h2>四、数据模型设计</h2>
+    <h3>（一）数据表总览</h3>
+    <p>系统共定义 <strong>19 张表</strong>，其中 <strong>18 张为业务表</strong>，另加 1 张系统账号表。按业务域划分如下：</p>
+    <table>
+      <caption>表 4-1　数据表按业务域划分</caption>
+      <thead>
+        <tr><th>业务域</th><th>数据表</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>组织与账号</td><td><code>employee</code>、<code>employee_report</code>、<code>sys_account</code></td><td>员工档案、员工日报/报告、登录账号</td></tr>
+        <tr><td>客户域</td><td><code>customer_lead</code>、<code>customer_followup</code>、<code>lead_screening</code></td><td>意向客户、跟进记录、客户研判结论</td></tr>
+        <tr><td>学员域</td><td><code>student</code>、<code>student_score</code>、<code>student_request</code></td><td>学员档案、成绩、申请与请假审批单</td></tr>
+        <tr><td>心理健康</td><td><code>student_mental_profile</code>、<code>mental_alert</code></td><td>学员心理画像、预警记录</td></tr>
+        <tr><td>售后服务</td><td><code>after_sales_ticket</code></td><td>投诉与工单</td></tr>
+        <tr><td>运营域</td><td><code>activity</code>、<code>activity_enrollment</code>、<code>course_project</code></td><td>活动、报名、课程项目</td></tr>
+        <tr><td>知识库</td><td><code>knowledge_doc</code></td><td>知识文档登记（关联 Dify 数据集）</td></tr>
+        <tr><td>报告</td><td><code>report_record</code></td><td>报告生成与下载记录</td></tr>
+        <tr><td>待办推送</td><td><code>todo_push</code></td><td>主动待办推送留痕（推送对象、去重键、处理状态）</td></tr>
+        <tr><td>审计</td><td><code>audit_log</code></td><td>全量写操作审计</td></tr>
+      </tbody>
+    </table>
+    <h3>（二）双栈兼容的三个关键处理</h3>
+    <p><strong>其一，主键类型。</strong> SQLite 的 <code>AUTOINCREMENT</code> 仅对 <code>INTEGER PRIMARY KEY</code> 生效，直接使用 <code>BigInteger</code> 会导致自增失效。项目定义了一个按方言切换的主键类型：</p>
+    <pre>BigIntPK = BigInteger().with_variant(Integer, "sqlite")</pre>
+    <p>这样在 SQLite 下生成 <code>INTEGER</code> 主键、在 MySQL 下生成 <code>BIGINT</code> 主键，模型代码无需分支。</p>
+    <p><strong>其二，JSON 字段。</strong> SQLite 无原生 JSON 类型，项目在 SQLite 下退化为 <code>TEXT</code> 存储、在 MySQL 下使用原生 <code>JSON</code>，读取侧统一用 <code>json.loads</code> / <code>json.dumps</code> 处理，对上层透明。</p>
+    <p><strong>其三，连接行为。</strong> SQLite 需要显式开启外键约束并调整日志模式，项目通过 SQLAlchemy 的 <code>connect</code> 事件在每次建立连接时执行：</p>
+    <pre>@event.listens_for(engine, "connect")
+def _set_sqlite_pragma(dbapi_conn, _):
+    cur = dbapi_conn.cursor()
+    cur.execute("PRAGMA foreign_keys=ON")
+    cur.execute("PRAGMA journal_mode=WAL")
+    cur.close()</pre>
+    <p>MySQL 侧则改为配置连接池：<code>pool_size</code>、<code>max_overflow</code>、<code>pool_pre_ping=True</code>（自动剔除失效连接）。</p>
+    <h3>（三）幂等与审计的字段设计</h3>
+    <ul><li><code>customer_followup.idempotency_key</code> 建有唯一约束，重复提交同一键时返回已存在的那条记录（并在响应中标记 <code>duplicated: true</code>），而不是新增一条。</li><li><code>audit_log</code> 记录每次写操作的 <code>action</code>、<code>actor_id</code>、<code>target_type</code>、<code>target_id</code>、<code>detail</code> 与 <code>trace_id</code>，形成"谁在什么时候通过哪条链路改了什么"的完整追溯。</li></ul>
+  </div>
+  <div class="chapter" id="section-5">
+    <h2>五、核心机制实现</h2>
+    <p>本章逐个说明支撑业务运转的十一项核心机制及其实现细节。</p>
+    <h3>（一）统一响应体与错误码</h3>
+    <p>所有业务接口返回同一结构，前端只需实现一套解析逻辑：</p>
+    <pre>{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "trace_id": "8f3c1a2e-..."
+}</pre>
+    <p><code>code</code> 为 0 表示成功，非 0 对应下表错误码；<code>trace_id</code> 与响应头 <code>X-Trace-Id</code> 一致，便于按链路排查。异常体系通过 FastAPI 的异常处理器统一转换为该结构，业务代码只需抛出语义化异常。</p>
+    <table>
+      <caption>表 5-1　错误码定义</caption>
+      <thead>
+        <tr><th>错误码</th><th>HTTP 状态</th><th>含义</th><th>触发场景示例</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>0</code></td><td>200</td><td>成功</td><td>—</td></tr>
+        <tr><td><code>40000</code></td><td>400</td><td>请求参数非法</td><td>材料格式不支持、批量数超上限、报告类型未知、导出格式不支持</td></tr>
+        <tr><td><code>40100</code></td><td>401</td><td>未认证或令牌无效</td><td>密码错误、缺少 Token、Token 过期</td></tr>
+        <tr><td><code>40300</code></td><td>403</td><td>无权限</td><td>学生读他人档案、员工读心理预警、NL2SQL 越权</td></tr>
+        <tr><td><code>40400</code></td><td>404</td><td>资源不存在</td><td>客户/学员/工单 ID 不存在</td></tr>
+        <tr><td><code>40900</code></td><td>409</td><td>冲突</td><td>手机号重复、请假单重复审批、幂等键冲突</td></tr>
+        <tr><td><code>50200</code></td><td>502</td><td>上游异常</td><td>Dify 调用失败且降级不可用</td></tr>
+        <tr><td><code>50000</code></td><td>500</td><td>服务端内部错误</td><td>未预期异常兜底</td></tr>
+      </tbody>
+    </table>
+    <h3>（二）两阶段意图路由与权限收敛</h3>
+    <p>意图识别采用"廉价预筛 + 上游精判"的两阶段策略，目的是在保证准确率的同时压低每次对话的延迟与上游成本。</p>
+    <p><strong>第一阶段（本地预筛）</strong> 用正则与关键词规则表匹配常见表达。例如消息中出现"请假""考务""申请单"即判定为 <code>student_helper</code> 的 <code>leave_apply</code> 意图。这一阶段不产生网络调用，覆盖高频简单问法。</p>
+    <p><strong>第二阶段（Dify 路由）</strong> 预筛未命中时，调用 Dify 的 <code>router</code> 工作流，由其输出 <code>agent</code>、<code>intent</code>、<code>confidence</code> 三元组。服务层再按置信度分流：</p>
+    <ul><li>置信度足够高 → 直接派发到目标 Agent 应答；</li><li>置信度偏低 → 返回澄清话术，请用户补充信息；</li><li>无有效意图 → 回落到该角色的默认 Agent。</li></ul>
+    <p><strong>权限收敛是这一机制的安全核心。</strong> 意图识别结果不能直接决定由哪个 Agent 应答，必须再经过角色白名单过滤：</p>
+    <table>
+      <caption>表 5-2　角色与 Agent 白名单</caption>
+      <thead>
+        <tr><th>角色</th><th>可访问 Agent 白名单</th><th>默认 Agent</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>visitor</code>（访客）</td><td><code>customer_service</code></td><td><code>customer_service</code></td></tr>
+        <tr><td><code>student</code>（学员）</td><td><code>student_helper</code>、<code>mental_care</code></td><td><code>student_helper</code></td></tr>
+        <tr><td><code>employee</code>（员工）</td><td><code>student_helper</code>、<code>enterprise_assistant</code></td><td><code>enterprise_assistant</code></td></tr>
+        <tr><td><code>manager</code>（管理层）</td><td><code>student_helper</code>、<code>enterprise_assistant</code>、<code>reporter</code></td><td><code>enterprise_assistant</code></td></tr>
+        <tr><td><code>admin</code>（管理员）</td><td>全部六个业务 Agent</td><td><code>enterprise_assistant</code></td></tr>
+      </tbody>
+    </table>
+    <p>举例说明其价值：访客发送"我要请假 2 天"，意图识别确实会判出 <code>student_helper</code> 的请假意图，但白名单校验发现 <code>visitor</code> 无权访问该 Agent，于是自动降级为 <code>customer_service</code> 应答。这一降级已在冒烟测试中作为独立用例验证。</p>
+    <p><strong>角色来源的安全性。</strong> 请求体中的角色字段一律不可信，服务端只从 Token 载荷中读取角色。访客令牌只携带 <code>anonymous: true</code> 标记，不查库、不落账号表，避免匿名用户污染账号体系。</p>
+    <h3>（三）Dify 集成实现</h3>
+    <p><strong>一应用一 Key。</strong> Dify 的 API Key 是按应用粒度签发的，格式以 <code>app-</code> 开头，不同应用互不通用。项目在配置中维护应用名到 Key 的映射，共对接 <strong>7 个 Dify 应用</strong>：</p>
+    <table>
+      <caption>表 5-3　Dify 应用清单</caption>
+      <thead>
+        <tr><th>应用名</th><th>类型</th><th>端点</th><th>职责</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>router</code></td><td>工作流</td><td><code>/workflows/run</code></td><td>意图识别与分流</td></tr>
+        <tr><td><code>customer_service</code></td><td>对话型</td><td><code>/chat-messages</code></td><td>访客咨询、机构信息、预约到访</td></tr>
+        <tr><td><code>student_helper</code></td><td>Chatflow（高级对话）</td><td><code>/chat-messages</code></td><td>学员请假、成绩查询、投诉建议、活动报名（内部为 6 分支编排）</td></tr>
+        <tr><td><code>enterprise_assistant</code></td><td>对话型</td><td><code>/chat-messages</code></td><td>员工日报录入、审批、数据速查</td></tr>
+        <tr><td><code>mental_care</code></td><td>对话型</td><td><code>/chat-messages</code></td><td>情绪安抚与心理支持</td></tr>
+        <tr><td><code>screener</code></td><td>工作流</td><td><code>/workflows/run</code></td><td>客户资质研判与结论输出</td></tr>
+        <tr><td><code>reporter</code></td><td>工作流</td><td><code>/workflows/run</code></td><td>日报/周报/月报生成</td></tr>
+      </tbody>
+    </table>
+    <p><strong>两类端点的调用差异。</strong> 对话型应用调用 <code>POST /v1/chat-messages</code>，请求体含 <code>query</code>、<code>response_mode</code>、<code>conversation_id</code>、<code>user</code>；工作流应用调用 <code>POST /v1/workflows/run</code>，请求体传命名参数 <code>inputs</code> 而非 <code>query</code>，结果从 <code>data.outputs</code> 读取。<code>user</code> 字段用于终态用户标识与会话隔离，项目以 <code>DIFY_USER_PREFIX</code> 前缀拼接业务用户 ID 后传入。</p>
+    <p><strong>模型接入：对话与嵌入均走云端。</strong> 编排平台自身需要两类模型——负责推理的对话模型，以及负责把知识库文档向量化的嵌入模型。项目把两者都指向云端 API：<strong>对话模型</strong>走云端大模型，<strong>知识库嵌入模型</strong>走智谱 <code>embedding-3</code>（向量维度 2048）。这样做的直接收益是<strong>全链路不再依赖本地常驻模型</strong>——后端、数据库、编排平台与模型服务都可在无独立显卡的机器上运行，演示环境与生产环境的模型行为也保持一致。代价是推理与知识库建索引都需要外网连通，因此编排平台所在容器必须放行出网（默认的出网代理已覆盖该场景）。</p>
+    <p><strong>mock / live 双模式。</strong> 这是本项目最重要的可测试性设计。<code>DIFY_MODE=mock</code> 时，<code>DifyClient</code> 不发起任何网络请求，而是返回确定性的构造响应：知识类问题返回内置知识库答案并附带引用来源，工作流类返回结构化的模拟输出，意图路由按关键词匹配表给出 <code>agent</code> 与 <code>intent</code>。这一机制带来三个直接收益：</p>
+    <ol><li><strong>离线可测。</strong> 完整的 472 条自动化测试与 149 条冒烟测试全部在无 Dify 实例的环境下运行并通过。</li><li><strong>演示零依赖。</strong> 无网络、无 Dify 部署也能完整演示全部业务链路。</li><li><strong>降级有据。</strong> <code>DIFY_MODE=live</code> 时，一旦上游超时、限流或返回错误，<code>DifyClient</code> 捕获异常后回落到同一套 mock 响应，保证接口不因上游抖动而不可用，同时在日志中留痕。</li></ol>
+    <p><strong>流式输出。</strong> <code>/chat/stream</code> 以 SSE 转发 Dify 的流式响应，逐条推送 <code>data:</code> 事件，最后以 <code>[DONE]</code> 收尾。实测一次完整流式应答产生 13 个事件。</p>
+    <p><strong>编排画布改用图编程。</strong> 学员助手后来从单纯的「人设 + 知识库」对话型应用升级为 Chatflow：一个起始节点接一个<strong>问题分类器</strong>，把学员提问分成 6 类，再分别接「HTTP 请求取数 → LLM 整理 → 直接回复」的三节点分支（成绩 / 申请单 / 工单）、两个 LLM 引导分支（请假、投诉等写操作只做槽位抽取与二次确认引导，<strong>不直接落库</strong>），以及一个「知识库检索 → LLM → 回复」分支兜底。整图 18 个节点、17 条连线。</p>
+    <p>这样做的收益很直接：<strong>能在画布上确定下来的分支就用画布表达，模型只负责"分到哪一类"这一件事</strong>，比纯靠提示词约束稳定得多。代价是引入了几个只有在图编程里才会遇到的坑，记录如下：</p>
+    <ol><li><strong>起始变量必须由服务端注入。</strong> 前端刻意不向 Dify 传 <code>inputs</code>——角色一律以签发的 Token 为准，否则访客可以伪造 <code>role=admin</code>。因此 Chatflow 声明的 <code>role</code> / <code>student_id</code> 两个起始变量由后端统一填充，其中 <code>role</code> 始终以 Token 载荷<strong>覆盖</strong>客户端传值；<code>student_id</code> 只对学员角色注入（学员账号的业务主键即 <code>student_id</code>，而员工账号的对应字段指向员工表，塞进去是错的）。</li><li><strong>分类器的输出格式不能自己描述。</strong> 问题分类器节点在运行时会自动拼接一段 system 提示词，要求模型返回 <code>{"category_id":…,"category_name":…}</code> 并据此解析。若在节点的 <code>instruction</code> 里再写一句"只输出类别的编号"，模型会真的返回一个裸值，解析器找不到 <code>{</code> 便直接报错中断。正确做法是：<code>instruction</code> 只写<strong>判断依据</strong>，一个字都不提输出格式。</li><li><strong>所有节点都要显式关闭思考模式。</strong> 推理型模型的思维链会占满输出，把结构化结果挤掉。项目对所有节点统一设置思考模式关闭。</li><li><strong>会话 ID 不能跨应用复用。</strong> Dify 的 <code>conversation_id</code> 是<strong>按应用隔离</strong>的，而前端只维护一个全局会话标识；当问题从客服类切到学员助手时，把上一轮别的应用返回的会话 ID 递过去，平台会以"会话不存在"拒绝。此时若被笼统的降级逻辑接走，用户会拿到一段<strong>与问题无关的兜底话术</strong>，而界面上只留一个不显眼的降级标记——属于典型的静默失败。修复方式是<strong>定向重试</strong>：只在响应码为 400/404 且响应体命中会话不存在特征时，丢弃该会话 ID 重开一次；其余错误（5xx、鉴权失败、连接异常）仍然照常降级且只调用一次。</li><li><strong>用 API 建图时节点类型要按画布的约定写。</strong> 编排画布给图形引擎只注册了一个节点组件，真正的节点种类放在节点数据的 <code>type</code> 字段里；若在节点的顶层 <code>type</code> 上也写了业务种类，图形引擎找不到对应组件，会退化成内置的默认节点——画布上表现为一排 150×21 的空白细条，节点既看不出内容也点不进去，同时右侧检查清单还会误报"缺少回复节点"。<strong>后端执行只读节点数据里的 <code>type</code>，因此这类问题不影响运行，只损坏编辑体验</strong>，排查时容易被误判为程序缺陷。</li></ol>
+    <p><strong>知识库与嵌入模型。</strong> 编排平台的知识库（数据集）在写入文档时调用嵌入模型生成向量索引，检索节点据此召回相关片段。项目把嵌入模型由早期的本地模型切换为<strong>智谱云端 <code>embedding-3</code></strong>（维度 2048）：切换在平台侧自动重建索引，<strong>数据集标识不变</strong>，因此画布上的知识检索节点与后端的知识文档登记功能都无需任何改动。这条链路上有两个容易被忽略的点——其一，<strong>嵌入模型决定向量空间，换模型等于换坐标系</strong>，旧的向量索引在新模型下不可用，必须整体重建（本地 bge-m3 维度为 1024，与云端 2048 不同，更需重建）；其二，<strong>更新知识库配置的接口要求请求体同时携带“索引方式”字段</strong>，缺失时后端读取该字段会直接抛错并返回 500，而不是给出友好的参数校验提示。验证切换是否真正生效，<strong>不能只看配置回显</strong>——必须用一次真实检索来证明：能命中相关内容，才说明文档已用新模型重新嵌入。</p>
+    <h3>（四）语音录入实现</h3>
+    <p>语音录入被抽象为 <code>AsrProvider</code> 协议，有两个实现：<code>MockAsr</code>（离线确定性转写，用于测试与演示）与 <code>DifyAsr</code>（调用 Dify 的音频转文字能力）。由 <code>ASR_PROVIDER</code> 环境变量选择，接口层完全无感知。</p>
+    <p>转写文本之后，再做一层<strong>槽位抽取</strong>，把自然语言转换为结构化字段。例如"我要请假 2 天，原因是看病"会被抽取为：</p>
+    <pre>{ "start_date": "2026-09-15", "days": 2, "reason": "看病" }</pre>
+    <p>抽取逻辑用轻量正则实现（日期、天数、事由、分数、考试名称等），关键在于它把"听写"变成了"填表"——上层业务拿到的是可直接落库的结构化数据，而不是一段需要二次解析的文本。冒烟测试对抽取结果做了逐字段断言。</p>
+    <h3>（五）受控 NL2SQL 实现</h3>
+    <p>自然语言转 SQL 是这类系统最大的数据安全风险点：一旦允许模型自由生成 SQL，就可能出现越权读取、全表扫描、甚至数据破坏。本项目采取<strong>"模型只做选择题，不做填空题"</strong>的受控方案：</p>
+    <p><strong>第一层，模板白名单。</strong> 系统预置 <strong>8 个查询模板</strong>，覆盖高频数据需求：</p>
+    <table>
+      <caption>表 5-4　受控查询模板清单</caption>
+      <thead>
+        <tr><th>模板 ID</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>lead_followups</code></td><td>按客户姓名查跟进记录</td></tr>
+        <tr><td><code>lead_status_stats</code></td><td>客户线索状态统计</td></tr>
+        <tr><td><code>student_scores</code></td><td>学员成绩查询</td></tr>
+        <tr><td><code>score_averages</code></td><td>各科平均分统计（只收「各科平均分」等明确组合，不收裸「平均分」）</td></tr>
+        <tr><td><code>pending_requests</code></td><td>待审批申请列表</td></tr>
+        <tr><td><code>open_tickets</code></td><td>未完结工单列表</td></tr>
+        <tr><td><code>activity_enrollment</code></td><td>活动报名情况</td></tr>
+        <tr><td><code>mental_alerts</code></td><td>心理预警（限管理层）</td></tr>
+      </tbody>
+    </table>
+    <p>模型的任务被压缩为：从这 8 个模板中选出最匹配的一个，并抽取其中的参数（如客户姓名）。SQL 语句本身由服务端从模板拼装，模型永远不产出原始 SQL。</p>
+    <p><strong>第二层，危险关键字拦截。</strong> 拼装后的 SQL 在真正执行前要再过一道校验。校验分两类策略：</p>
+    <ul><li>词边界匹配拦截结构性写操作：<code>INSERT</code>、<code>UPDATE</code>、<code>DELETE</code>、<code>DROP</code>、<code>ALTER</code>、<code>TRUNCATE</code>、<code>CREATE</code>、<code>REPLACE</code>、<code>GRANT</code>、<code>REVOKE</code>、<code>ATTACH</code>、<code>PRAGMA</code>。</li><li>子串匹配拦截高危函数与元数据探测：<code>INTO OUTFILE</code>、<code>LOAD_FILE</code>、<code>INFORMATION_SCHEMA</code>、<code>SLEEP(</code>、<code>BENCHMARK(</code>。</li></ul>
+    <p>这里有一个实现细节值得记录：最初的版本把 <code>create</code> 作为普通子串拦截，结果误伤了 <code>created_at</code>、<code>updated_at</code> 这类合法列名，导致正常查询被拒。修正方案是把结构性关键字改为<strong>词边界正则</strong>（<code>\b(?:insert|update|...)\b</code>），与子串类规则分离，既堵住了写操作，又不伤及合法标识符。</p>
+    <p><strong>第三层，表名白名单与行数上限。</strong> SQL 中出现的表名必须落在允许的 17 张业务表内（<code>ALLOWED_TABLES</code>，不含新增的 <code>todo_push</code> 与 <code>sys_account</code>）；任何查询的结果集被强制限制在 <code>NL2SQL_MAX_ROWS</code>（默认 50）行以内，防止全表拉取。</p>
+    <p><strong>第四层，角色作用域。</strong> 敏感模板（如心理预警）与角色绑定。普通员工请求该模板时直接返回 403，而非返回空结果——拒绝要明确，避免被探测出"数据存在但读不到"。</p>
+    <h3>（六）幂等设计与审计</h3>
+    <p><strong>幂等。</strong> 跟进记录创建与请假申请提交这类写操作，要求客户端携带 <code>Idempotency-Key</code>。服务端先按键查询：已存在则原样返回该记录并标记 <code>duplicated: true</code>；不存在才落库。这解决了移动端弱网重试、用户连点造成的重复数据问题。</p>
+    <p><strong>审计。</strong> 所有写操作在提交事务的同时写入 <code>audit_log</code>，其中包含当前请求的 <code>trace_id</code>。审计日志的查询接口本身也受权限管控——仅 <code>manager</code> 及以上角色可读，普通员工访问返回 403。</p>
+    <h3>（七）Dify 回调内部工具</h3>
+    <p>编排层（Dify）在推理过程中需要读取业务数据，例如"这个学员的成绩是多少""当前有哪些待审批申请"。这部分能力通过内部工具接口开放给 Dify：</p>
+    <pre>GET  /internal/tools              # 工具清单
+POST /internal/tools/{tool_name}  # 执行指定工具</pre>
+    <p>当前开放 <strong>26 个工具</strong>（只读 12 个、写入 14 个），每个工具都声明了角色门槛与入参 JSON Schema。<code>GET /internal/tools</code> 除返回清单外，还返回一份<strong>角色—工具覆盖矩阵</strong>，便于核对"哪类角色能调用哪些能力"。只读工具覆盖客户查询、成绩查询、待办与工单、组织架构、报告取数等；写入工具覆盖线索创建、跟进记录、请假审批、投诉处理、日报提交、待办推送等。</p>
+    <p><strong>两种鉴权，满足其一即可。</strong> 这些接口不依赖用户 Token（调用方是 Dify 服务端而非终端用户），采用两条通道：</p>
+    <ul><li><strong>HMAC-SHA256 签名</strong>（主通道）：请求方携带 <code>X-Tool-Timestamp</code>（请求时间戳）与 <code>X-Tool-Signature</code>（对"时间戳 + 原始请求体"计算的签名）。服务端校验签名是否匹配，并检查时间戳与当前时间的偏差是否在 300 秒以内（防重放）。签名错误返回 403，超时同样拒绝。</li><li><strong>静态 Bearer Key</strong>（兼容通道）：编排平台的"自定义工具"功能只支持 none / api_key / bearer 三种鉴权方式，<strong>不会在调用前现场计算 HMAC</strong>，因此额外开放一条 <code>Authorization: Bearer &lt;DIFY_TOOL_KEY&gt;</code> 通道。该值留空即关闭此通道；启用时应在网关层限定只允许编排平台所在网段访问 <code>/internal/tools*</code>。两条通道不叠加：一旦携带签名头，就只按签名校验，不会回退到静态 Key。</li></ul>
+    <p><strong>工具级再按角色过滤。</strong> 通过接口鉴权后，每个工具还会依据调用者角色做一次门槛判断（<code>visitor &lt; student &lt; employee &lt; manager &lt; admin</code>），角色不足返回 403。这里有一处刻意的分工：早期为顾问与管理层编写的只读工具，角色门槛是 <code>employee</code> 且查询参数可选（不传即跨对象返回），<strong>不能为了让学员也能用而降低其门槛</strong>——那等于把跨学员的数据暴露出去。正确做法是另开一个"只能查本人"的同款工具（强制要求传入本人标识、门槛对齐学员角色），并用一条回归测试锁住两者的分工。</p>
+    <p><strong>写操作两阶段确认。</strong> 写入类工具不会一调就落库：首次调用返回 <code>{needs_confirm, preview, token}</code>，其中 <code>preview</code> 是即将写入内容的人可读摘要；调用方带着 <code>token</code> 并把 <code>confirm</code> 置为真后再调一次才真正提交。这样"先给用户看要写什么、确认了再写"的交互由接口层强制保证，而不是依赖编排侧的提示词自觉。</p>
+    <p>冒烟测试中包含一条"伪造签名被拒"的负向用例，用于验证这道防线。</p>
+    <h3>（八）材料上传解析与批量研判</h3>
+    <p>客户研判的入口从"手工填字段"前移到"上传原件"。<code>POST /screening/upload</code> 接收 multipart 文件，落盘后用 <code>services/material.py</code> 解析并抽取字段。</p>
+    <p><strong>解析走双路并存。</strong> 优先调用 <code>pypdf</code> / <code>pdfplumber</code> / <code>openpyxl</code>，缺库时自动回落到纯标准库实现（PDF 解 FlateDecode 内容流，XLSX 解 zip 内的 <code>sharedStrings.xml</code> 与 <code>sheetN.xml</code>）。响应里用 <code>parser</code> 字段<strong>显式标明本次走了哪条路</strong>，并用 <code>warnings</code> 说明局限——不允许静默降级。</p>
+    <p><strong>抽取用规则不用模型。</strong> regex 抽取 9 个关键字段；横向表（表头行 + 值行）先按列名还原成"标签 | 值"再抽；<code>_LABEL_WORDS</code> 黑名单挡住"把表头字段名当成值"。<code>extract_fields()</code> 只返回<strong>确实抽到</strong>的键，缺失由 <code>missing_fields()</code> 单独计算，不往字段里塞占位符。</p>
+    <p><strong>人工复核留痕。</strong> <code>lead_screening</code> 的 <code>ai_conclusion</code> 存 AI 原值（写一次不再改），<code>conclusion</code> 是对外生效值；<code>review_status ∈ PENDING / CONFIRMED / OVERRIDDEN</code>。<code>PATCH /screening/{id}/review</code> 支持确认与推翻两种动作，<code>GET /screening/corrections</code> 输出"AI 结论 → 人工结论"的迁移分布，作为规则优化素材。</p>
+    <p><strong>批量研判按 SAVEPOINT 隔离单条失败。</strong> <code>POST /screening/batch</code> 支持按材料清单或客户 ID 清单批量发起，单条失败用 <code>with db.begin_nested():</code> 隔离，不用 <code>rollback()</code>——否则会把已成功的整批带走。响应返回批次号与成败计数，<code>batch_id</code> 支持按批回捞。</p>
+    <blockquote><p>字段口径收敛：规范键名为 <code>name / age / degree / school / major / language / gpa / intention_country / intention_stage</code>，Dify 侧返回的 <code>country</code>、<code>education</code> 等由 <code>normalize_fields()</code> 归一，避免同一份材料在不同入口抽出不同键名。</p></blockquote>
+    <h3>（九）组织架构查询与新人入职指引</h3>
+    <p><code>app/api/v1/org.py</code> 提供只读的组织视图：<code>/org/tree</code> 按 <code>employee.manager_id</code> 递归成树（带成环断开的兜底），另有部门概览、员工花名册（关键字检索）与员工详情（含汇报关系）。全部 <code>staff_only</code>，不写审计。</p>
+    <p>入职指引不是散落在页面里的文案，而是<strong>版本化的内容资产</strong>（<code>app/services/onboarding.py</code>，<code>GUIDE_VERSION=V2026.09</code>）：5 个阶段（D0 / D1 / W1 / M1 / M3）共 19 条步骤、12 条 FAQ 与关键联系人规则表。<code>resolve_contacts()</code> 从 <code>employee</code> 表现算直属上级、部门负责人与带教，<strong>查不到就如实给出说明，不编造姓名</strong>。</p>
+    <p>FAQ 检索用两级策略：归一化子串命中给满分，未命中再算字符二元组 Dice 相似度（阈值 0.30），因此整句提问（如"报到当天要带什么"）也能召回。指引同时登记进 <code>knowledge_doc</code>（<code>category=NEO</code>），对话入口预筛 <code>(入职指引|新人指引|入职流程|…)</code> 即路由到 <code>enterprise_assistant</code> 的 <code>onboarding</code> 意图，答复带版本出处。</p>
+    <h3>（十）主动待办推送与心理预警触达</h3>
+    <p><strong>待办是"算"的，推送记录才是"存"的。</strong> <code>services/todo.collect()</code> 每次现场扫 5 类来源（待审批申请 / 待跟进工单 / 到期客户跟进 / 待复核研判 / 未触达心理预警）——业务处理完，待办自然消失，不再维护一张会失同步的"待办表"。<code>todo_push</code> 表只记录"推过什么、推给谁、处理没有"，靠 <code>dedupe_key</code>（<code>category:subject:时间窗</code>）实现<strong>幂等 + 频控</strong>：同一时间窗不重复提醒同一个人。</p>
+    <p><code>collect()</code> 覆盖的 5 个类别与可见角色如下：</p>
+    <table>
+      <caption>表 5-5　待办类别与可见角色</caption>
+      <thead>
+        <tr><th>类别</th><th>含义</th><th>可见角色</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>approval</code></td><td>待审批申请（请假等）</td><td>员工及以上</td></tr>
+        <tr><td><code>ticket</code></td><td>未完结工单</td><td>员工及以上</td></tr>
+        <tr><td><code>followup</code></td><td>到期 / 逾期客户跟进</td><td>员工及以上</td></tr>
+        <tr><td><code>screening_review</code></td><td>待人工复核的研判结果</td><td>员工及以上</td></tr>
+        <tr><td><code>mental_alert</code></td><td>未触达的心理预警</td><td>仅管理层</td></tr>
+      </tbody>
+    </table>
+    <p><strong>调度器只管"什么时候跑"。</strong> <code>services/scheduler.py</code> 是 stdlib threading 实现的极简调度器（不引 APScheduler），业务逻辑全在 <code>todo.push_due()</code> / <code>run_once()</code>，因此定时线程、<code>POST /todo/push</code> 手动触发、pytest 直接调用走的是<strong>同一条逻辑</strong>。<code>ENABLE_SCHEDULER</code> 默认 <strong>false</strong>——测试与 E2E 同进程同数据，后台线程会写脏 <code>todo_push</code>。</p>
+    <p><strong>心理预警是敏感数据。</strong> 只对 <code>manager</code> / <code>admin</code> 出现，与 <code>/alerts</code> 的 <code>manager_only</code> 同口径；意图路由层 employee 对 enterprise_assistant 本就放行，所以权限<strong>必须在 handler 里再卡一道</strong>。触达即写 <code>notified_at</code> / <code>notified_to</code> / <code>notify_channel</code> / <code>intervention</code>，处理人取"学生带教顾问 → 兜底管理层"，找不到就如实写在 note 里。<code>POST /todo/push</code> 处理 <code>mental_alert</code> 类时会<strong>顺带自动触达</strong>，否则"未触达预警"会永远挂在待办上。标记已处理（<code>ack</code>）刻意做成幂等，重复调用返回 <code>already=True</code>，不刷时间也不报 409。</p>
+    <h3>（十一）五类业务报告与定时导出</h3>
+    <p><strong>先快照、再渲染。</strong> <code>services/reports.build()</code> 只跑一次聚合，结果写进 <code>ReportRecord.snapshot</code>（JSON）；markdown / PDF / xlsx / 打印版四个出口<strong>只读这一份</strong>，杜绝"同一天导出的两份数字不一样"这类口径漂移。</p>
+    <p>五类口径：<code>customer_ops</code> / <code>daily_digest</code> / <code>weekly_digest</code> / <code>mental_weekly</code> / <code>complaint_weekly</code>。历史的 <code>weekly | monthly | custom</code> 由 <code>normalize_type()</code> 映射到最接近的新类型，<strong>不返回 400</strong>，避免打断旧调用方。</p>
+    <table>
+      <caption>表 5-6　五类业务报告口径</caption>
+      <thead>
+        <tr><th>key</th><th>报告</th><th>粒度</th><th>覆盖范围</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>customer_ops</code></td><td>全域客户经营分析报告</td><td>周（7 天）</td><td>意向 / 成交 / 流失三大客群 + 同环比 + 共性画像 + 流失预警</td></tr>
+        <tr><td><code>daily_digest</code></td><td>员工日报汇总报告（日）</td><td>日（1 天）</td><td>当日全员工日报的核心进展 / 关键产出 / 潜在风险</td></tr>
+        <tr><td><code>weekly_digest</code></td><td>员工日报汇总报告（周）</td><td>周（7 天）</td><td>近一周日报按人聚合：产出、覆盖度、风险集中度</td></tr>
+        <tr><td><code>mental_weekly</code></td><td>学生心理健康周报</td><td>周（7 天）</td><td>情绪态势 / 高危名单 / 周期节点 / 疏导建议</td></tr>
+        <tr><td><code>complaint_weekly</code></td><td>投诉处理周报</td><td>周（7 天）</td><td>投诉量同环比 / 分类 / 处理时效 / 满意度 / 长期未决</td></tr>
+      </tbody>
+    </table>
+    <p>四种导出格式，全部零第三方依赖：</p>
+    <ul><li><code>xlsx</code>：<code>services/xlsx_writer.py</code> 纯标准库写（inlineStr + 冻结首行 + 中文列宽粗算），用项目自己的读端 <code>material._xlsx_builtin</code> 做往返测试。</li><li><code>print</code>：打印就绪 HTML，浏览器用系统字体排版后「另存为 PDF」，<strong>界面主推</strong>此路径，中文渲染一定正确。</li><li><code>pdf</code>：<code>services/pdf_writer.py</code> 纯标准库直出矢量 PDF（Type0 / STSong-Light / UniGB-UCS2-H + 自写 ToUnicode CMap）。文字可提取，但<strong>不嵌字体文件</strong>——实测 Edge / Chrome 的 PDFium 会把中文渲染成乱码（布局、表格、页脚均正常，仅字形错误），Acrobat / WPS 正常。要"任何阅读器都对"必须嵌中文字体子集（属部署期依赖），这一局限已在界面与文档中明说。</li><li><code>md</code>：<code>render_markdown()</code> 是 <code>ReportRecord.content</code> 的来源。</li></ul>
+    <p><strong>定时生成</strong> 由纯函数 <code>due_types(now)</code>（日报类每天、周报类周一）+ <code>run_scheduled()</code> 组成，按 <code>(report_type, period_start, period_end, from_schedule=True)</code> 幂等；入口是 <code>POST /reports/scheduled/run</code>，也挂在 <code>scheduler.tick()</code> 里。中文文件名导出走 RFC 6266 的 <code>filename*=UTF-8''</code> 形式（<code>ops.py::_content_disposition</code>），否则 Starlette 会按 latin-1 编码抛 <code>UnicodeEncodeError</code>。</p>
+  </div>
+  <div class="chapter" id="section-6">
+    <h2>六、接口清单</h2>
+    <p>系统对外暴露 <strong>82 条路径、91 个接口操作</strong>，分为 10 个功能组。全量接口定义可通过 <code>/openapi.json</code> 或 <code>/docs</code> 交互式文档获取。</p>
+    <table>
+      <caption>表 6-1　接口清单（按功能组）</caption>
+      <thead>
+        <tr><th>功能组</th><th>接口数</th><th>主要接口</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>system</code> 系统</td><td>6</td><td><code>GET /health</code>、<code>GET /ready</code>、<code>POST /auth/token</code>、<code>POST /auth/visitor</code>、<code>GET /auth/me</code>、<code>POST /auth/password</code></td></tr>
+        <tr><td><code>chat</code> 对话</td><td>3</td><td><code>POST /chat/message</code>、<code>POST /chat/stream</code>、<code>POST /chat/asr</code></td></tr>
+        <tr><td><code>crm</code> 客户</td><td>20</td><td><code>POST/GET /leads</code>、<code>GET /leads/{id}</code>、<code>POST/GET /leads/{id}/followups</code>、<code>PATCH /leads/{id}/status</code>、<code>POST/GET /screening</code>、<code>POST /screening/analyze</code>、<code>POST /screening/batch</code>、<code>POST /screening/upload</code>、<code>GET /screening/{id}</code>、<code>PATCH /screening/{id}/review</code>、<code>GET /screening/corrections</code>、<code>GET /screening/files/{path}</code>、<code>GET/POST /screening/rules</code>、<code>GET /screening/rules/active</code>、<code>GET /screening/rules/template</code>、<code>POST /screening/rules/{id}/activate</code>、<code>POST /screening/rules/{id}/archive</code></td></tr>
+        <tr><td><code>student</code> 学员</td><td>22</td><td><code>GET /students</code>、<code>GET /students/{id}</code>、<code>GET /students/{id}/progress</code>、<code>POST /students/{id}/progress</code>、<code>GET /students/{id}/progress-board</code>、<code>POST/GET /scores</code>、<code>POST /leave/apply</code>、<code>POST /leave/{id}/approve</code>、<code>GET /requests</code>、<code>POST/GET/PATCH /tickets</code>、<code>GET/PATCH /alerts</code>、<code>POST /alerts/notify</code>、<code>GET/POST /students/{id}/deadlines</code>、<code>GET /students/{id}/deadline-notifications</code>、<code>PATCH /deadlines/{id}</code>、<code>POST /deadlines/run-reminders</code>、<code>GET /deadlines/run-reminders/preview</code></td></tr>
+        <tr><td><code>org</code> 组织与指南</td><td>8</td><td><code>GET /org/tree</code>、<code>GET /org/departments</code>、<code>GET /org/employees</code>、<code>GET /org/employees/{id}</code>、<code>GET /org/onboarding/guide</code>、<code>GET /org/onboarding/checklist</code>、<code>GET /org/onboarding/faq</code>、<code>GET /org/onboarding/contacts</code></td></tr>
+        <tr><td><code>operation</code> 运营</td><td>18</td><td><code>GET/POST /activities</code>、<code>POST /activities/{id}/enroll</code>、<code>GET /activities/{id}/enrollments</code>、<code>GET /reports/types</code>、<code>POST /reports/generate</code>、<code>GET /reports</code>、<code>GET /reports/{id}</code>、<code>GET /reports/{id}/download</code>、<code>GET /reports/{id}/export</code>、<code>GET /reports/{id}/deliveries</code>、<code>POST /reports/{id}/push</code>、<code>POST /reports/scheduled/run</code>、<code>POST /reports/daily</code>、<code>GET /reports/daily/summary</code>、<code>GET /reports/daily/trend</code>、<code>POST/GET /kb/documents</code></td></tr>
+        <tr><td><code>todo</code> 待办与预警</td><td>4</td><td><code>GET /todo/pending</code>、<code>POST /todo/push</code>、<code>GET /todo/pushes</code>、<code>PATCH /todo/pushes/{id}/ack</code></td></tr>
+        <tr><td><code>data</code> 数据</td><td>3</td><td><code>POST /nl2sql/query</code>、<code>GET /nl2sql/templates</code>、<code>GET /audit/logs</code></td></tr>
+        <tr><td><code>notifications</code> 通知</td><td>5</td><td><code>GET /notifications</code>、<code>GET /notifications/unread-count</code>、<code>POST /notifications/{id}/read</code>、<code>POST /notifications/read-all</code>、<code>GET /notifications/channels</code></td></tr>
+        <tr><td><code>internal-tools</code> 内部</td><td>2</td><td><code>GET /internal/tools</code>、<code>POST /internal/tools/{name}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="chapter" id="section-7">
+    <h2>七、部署实施</h2>
+    <h3>（一）部署方式一：本地 SQLite（推荐用于开发与演示）</h3>
+    <p>这是最快跑通的路径，实测从零到服务可用约 3 分钟。</p>
+    <p><strong>步骤 1：创建虚拟环境并安装依赖。</strong> </p>
+    <pre>python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux / macOS
+source .venv/bin/activate
+
+pip install -r requirements.txt</pre>
+    <p><strong>步骤 2：准备配置。</strong> </p>
+    <pre>copy .env.example .env      # Linux/macOS: cp .env.example .env</pre>
+    <p>默认配置即为 SQLite + mock 模式，开箱即用。若接入真实 Dify，修改 <code>DIFY_MODE=live</code>、<code>DIFY_BASE_URL</code> 与 <code>DIFY_APP_KEYS</code> 即可。</p>
+    <p><strong>步骤 3：初始化并填充种子数据。</strong> </p>
+    <pre>python scripts/seed.py</pre>
+    <p>种子脚本是<strong>幂等</strong>的，重复执行不会产生重复数据；需要清空重建时使用 <code>python scripts/seed.py --reset</code>。执行后会写入 5 个演示账号、3 名员工、3 名学员、3 条意向客户，以及成绩、申请、工单、预警、活动、课程项目、知识文档与日报等配套数据。</p>
+    <p><strong>步骤 4：启动服务。</strong> </p>
+    <pre>uvicorn app.main:app --host 127.0.0.1 --port 8010</pre>
+    <p>启动日志会明确打印当前生效的运行模式，便于确认配置是否按预期加载：</p>
+    <pre>启动完成：db=sqlite dify=mock asr=mock</pre>
+    <p><strong>步骤 5：验证。</strong> </p>
+    <pre>curl http://127.0.0.1:8010/api/v1/health</pre>
+    <p>预期返回 <code>{"code": 0, ...}</code>。交互式文档位于 <code>http://127.0.0.1:8010/docs</code>。</p>
+    <blockquote><p>推荐直接用项目自带的一键启动器：<code>python scripts/launcher.py --headless --no-browser</code></p></blockquote>
+    <blockquote><p>（或双击 <code>start.bat</code>），它会自动挑空闲端口、建库灌种子并探活；默认后端 <strong>8010</strong>、前端 <strong>8020</strong>。</p></blockquote>
+    <blockquote><p>端口以 <code>scripts/launcher.py</code> 为唯一权威源，各脚本请勿自行硬编码。</p></blockquote>
+    <h3>（二）部署方式二：MySQL 8 + Docker Compose（推荐用于生产）</h3>
+    <p><strong>数据库连接串切换。</strong> 唯一需要修改的配置项是 <code>DATABASE_URL</code>：</p>
+    <pre>DATABASE_URL=mysql+pymysql://ai_user:ai_password@127.0.0.1:3306/ai_assistant?charset=utf8mb4</pre>
+    <p><strong>安装 MySQL 驱动。</strong> </p>
+    <pre>pip install -r requirements-mysql.txt</pre>
+    <p><strong>使用 Docker Compose 一键启动。</strong> 项目提供的 <code>docker-compose.yml</code> 同时编排 <code>mysql:8</code> 与 API 服务两个容器：</p>
+    <pre>docker compose up -d --build</pre>
+    <p>API 容器基于 <code>python:3.12-slim</code>，内置健康检查；它通过 <code>depends_on</code> 等待 MySQL 就绪后再启动，避免连接竞态。</p>
+    <p><strong>表结构创建。</strong> 应用启动时 <code>init_db()</code> 会依据 ORM 元数据自动建表。生产环境若需版本化演进，建议引入 Alembic 管理迁移，<code>target_metadata</code> 指向 <code>Base.metadata</code> 即可。</p>
+    <h3>（三）生产部署检查清单</h3>
+    <p>上线前请逐项确认：</p>
+    <ol><li><code>SECRET_KEY</code> 已替换为 32 字节以上的随机值，且未提交进版本库。</li><li><code>DATABASE_URL</code> 指向 MySQL，且连接串已启用 <code>utf8mb4</code> 字符集。</li><li><code>CORS_ORIGINS</code> 已从 <code>["*"]</code> 收紧为实际前端域名。</li><li><code>DIFY_MODE=live</code> 且 7 个应用的 Key 均已配置，<code>DIFY_BASE_URL</code> 指向内网或受控地址。</li><li>反向代理（Nginx / 网关）已配置 TLS，并将 <code>/internal/tools*</code> 限制为仅 Dify 服务可访问——该路径使用签名鉴权而非用户鉴权，不应暴露在公网。</li><li>MySQL 已配置定期备份，<code>audit_log</code> 表按业务要求设定保留周期。</li><li><code>NL2SQL_MAX_ROWS</code> 依据实际数据量调整，避免大结果集拖垮接口。</li><li>已接入日志采集，<code>X-Trace-Id</code> 可跨服务检索。</li></ol>
+    <h3>（四）演示账号</h3>
+    <p>种子数据创建的账号如下（密码仅用于开发与演示，上线前须全部重置）：</p>
+    <table>
+      <caption>表 7-1　演示账号</caption>
+      <thead>
+        <tr><th>用户名</th><th>密码</th><th>角色</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>admin</code></td><td><code>admin123</code></td><td><code>admin</code></td><td>系统管理员，可访问全部 Agent</td></tr>
+        <tr><td><code>manager</code></td><td><code>manager123</code></td><td><code>manager</code></td><td>运营管理层，可读心理预警与审计日志</td></tr>
+        <tr><td><code>advisor</code></td><td><code>advisor123</code></td><td><code>employee</code></td><td>留学顾问</td></tr>
+        <tr><td><code>teacher</code></td><td><code>teacher123</code></td><td><code>employee</code></td><td>教学老师</td></tr>
+        <tr><td><code>student</code></td><td><code>student123</code></td><td><code>student</code></td><td>在读学员</td></tr>
+      </tbody>
+    </table>
+    <p>此外无需账号即可通过 <code>POST /api/v1/auth/visitor</code> 获取访客令牌，用于体验咨询类对话。</p>
+  </div>
+  <div class="chapter" id="section-8">
+    <h2>八、测试与验收</h2>
+    <p>测试分为两层：<strong>单元/集成测试</strong>验证代码逻辑与接口契约，<strong>端到端冒烟测试</strong>验证真实部署后的完整业务链路。</p>
+    <h3>（一）单元与集成测试</h3>
+    <p><strong>执行命令：</strong> </p>
+    <pre>pytest -q --cov=app --cov-report=term-missing</pre>
+    <p><strong>实测结果：472 条用例全部通过，整体覆盖率 91%（TOTAL 5576 语句 / 516 未覆盖）。</strong> </p>
+    <p>测试夹具（<code>tests/conftest.py</code>）在导入应用前先设置环境变量（独立测试数据库、<code>DIFY_MODE=mock</code>、32 字节以上密钥），确保测试过程不触碰开发数据库、不发起外部网络请求。数据库使用会话级夹具，在测试会话开始时整体重建并灌入种子数据。</p>
+    <p><strong>覆盖率的分布说明：</strong> </p>
+    <table>
+      <caption>表 8-1　单元测试覆盖率分布</caption>
+      <thead>
+        <tr><th>模块</th><th>覆盖率</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>app/api/v1/notice.py</code></td><td>100%</td><td>通知与消息中心接口</td></tr>
+        <tr><td><code>app/api/v1/router.py</code></td><td>100%</td><td>路由挂载</td></tr>
+        <tr><td><code>app/main.py</code></td><td>100%</td><td>应用装配</td></tr>
+        <tr><td><code>app/models.py</code></td><td>100%</td><td>数据模型定义</td></tr>
+        <tr><td><code>app/schemas.py</code></td><td>100%</td><td>请求/响应契约（只保留被引用的 31 个模型）</td></tr>
+        <tr><td><code>app/services/audit.py</code></td><td>100%</td><td>审计日志</td></tr>
+        <tr><td><code>app/services/notify.py</code></td><td>100%</td><td>通知分发（通道就绪判定、外发失败兜底落站内、已读闭环）</td></tr>
+        <tr><td><code>app/services/asr.py</code></td><td>100%</td><td>语音识别（Provider 选择、上游异常包装、槽位抽取）</td></tr>
+        <tr><td><code>app/api/v1/system.py</code></td><td>100%</td><td>系统与认证（健康探针降级、停用账号、改密与审计）</td></tr>
+        <tr><td><code>app/services/scheduler.py</code></td><td>100%</td><td>后台调度线程（起停状态机 / 循环兜异常 / 三任务编排）</td></tr>
+        <tr><td><code>app/api/v1/org.py</code></td><td>98%</td><td>组织架构与入职指引接口</td></tr>
+        <tr><td><code>app/api/v1/todo.py</code></td><td>97%</td><td>主动待办与推送留痕接口</td></tr>
+        <tr><td><code>app/config.py</code></td><td>97%</td><td>配置加载与校验</td></tr>
+        <tr><td><code>app/db.py</code></td><td>96%</td><td>数据库层（补列 / 默认值渲染；MySQL 方言分支离线不可达）</td></tr>
+        <tr><td><code>app/services/reports.py</code></td><td>96%</td><td>五类报告聚合与四出口渲染</td></tr>
+        <tr><td><code>app/api/v1/data.py</code></td><td>95%</td><td>数据洞察接口</td></tr>
+        <tr><td><code>app/services/todo.py</code></td><td>95%</td><td>待办现场计算、推送幂等与预警触达</td></tr>
+        <tr><td><code>app/services/xlsx_writer.py</code></td><td>94%</td><td>纯标准库写 xlsx</td></tr>
+        <tr><td><code>app/api/v1/ops.py</code></td><td>94%</td><td>运营域接口（含报告导出）</td></tr>
+        <tr><td><code>app/services/nl2sql.py</code></td><td>94%</td><td>受控 SQL</td></tr>
+        <tr><td><code>app/services/onboarding.py</code></td><td>93%</td><td>入职指引内容资产与联系人解析</td></tr>
+        <tr><td><code>app/core.py</code></td><td>92%</td><td>核心工具</td></tr>
+        <tr><td><code>app/api/v1/crm.py</code></td><td>92%</td><td>客户域接口（含材料上传解析、复核、批量研判）</td></tr>
+        <tr><td><code>app/api/v1/tools.py</code></td><td>91%</td><td>内部工具接口入口</td></tr>
+        <tr><td><code>app/api/v1/student.py</code></td><td>91%</td><td>学员域接口</td></tr>
+        <tr><td><code>app/services/intent.py</code></td><td>90%</td><td>意图路由</td></tr>
+        <tr><td><code>app/api/deps.py</code></td><td>90%</td><td>鉴权依赖</td></tr>
+        <tr><td><code>app/services/deadline.py</code></td><td>89%</td><td>学业考务与考前提醒</td></tr>
+        <tr><td><code>app/services/rules.py</code></td><td>89%</td><td>画像研判规则引擎</td></tr>
+        <tr><td><code>app/api/v1/chat.py</code></td><td>88%</td><td>对话接口（含编排输入注入与会话重试）</td></tr>
+        <tr><td><code>app/services/pdf_writer.py</code></td><td>88%</td><td>纯标准库写 PDF</td></tr>
+        <tr><td><code>app/services/dify.py</code></td><td>85%</td><td>Dify 客户端（mock/live 双模与降级）</td></tr>
+        <tr><td><code>app/services/material.py</code></td><td>82%</td><td>材料解析与字段抽取（双路并存）</td></tr>
+        <tr><td><code>app/services/mock_agent.py</code></td><td>82%</td><td>mock 模式本地编排</td></tr>
+        <tr><td><code>app/services/agent_tools.py</code></td><td>78%</td><td>内部工具注册表（26 个工具的 Schema 与角色门槛）</td></tr>
+      </tbody>
+    </table>
+    <p><strong>关于未覆盖部分的说明。</strong> 缺口集中在两类离线不可达的分支：<code>app/db.py</code> 的 MySQL 连接池分支、以及 <code>app/services/dify.py</code> 的 <code>live</code> 模式路径。此外 <code>app/services/agent_tools.py</code>（内部工具注册表，26 个工具的 Schema 与处理器）虽然鉴权通道与角色门槛都有单元测试覆盖，但其中相当一部分处理器是专为 <code>live</code> 编排链路准备的，需要真实 Dify 实例与真实业务数据才能端到端触发，因此单测覆盖率低于整体水平——这部分缺口由编排侧的逐分支联调补上。以上都依赖真实外部依赖（MySQL 实例、Dify 服务）才能在测试中触发，属于<strong>已知且被接受的缺口</strong>。项目通过把 mock / 前台触发设计为默认路径，使其余全部业务逻辑都在测试覆盖之内。上线前建议在预发环境针对 <code>live</code> 模式与 MySQL 补一轮集成验证。</p>
+    <h3>（二）端到端冒烟测试</h3>
+    <p><strong>执行方式：</strong> 先启动服务，再对真实运行中的服务发起 HTTP 请求。</p>
+    <pre># 终端 1
+uvicorn app.main:app --host 127.0.0.1 --port 8010
+# 终端 2
+python scripts/smoke_test.py --base http://127.0.0.1:8010</pre>
+    <p><strong>实测结果：149 条用例全部通过。</strong> 无 Dify 实例的离线环境下累计请求耗时 563 毫秒（mock 快路径）；接入真实 Dify 后约 30 秒，因含真实模型往返。测试报告自动写入 <code>reports/smoke_report.md</code>。</p>
+    <p>覆盖的链路与关键断言如下：</p>
+    <table>
+      <caption>表 8-2　冒烟测试链路覆盖</caption>
+      <thead>
+        <tr><th>链路</th><th>用例数</th><th>关键断言</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>存活与认证</td><td>9</td><td>健康检查、就绪探针、OpenAPI 可读、三角色登录、访客令牌；错误密码与无 Token 均被 401 拒绝</td></tr>
+        <tr><td>对话与语音</td><td>9</td><td>客服问答命中正确 Agent 且带引用；<strong>访客说请假被降级为客服 Agent</strong>；流式响应收到 13 个 SSE 事件；语音槽位抽取字段逐项正确</td></tr>
+        <tr><td>客户域</td><td>32</td><td>新增客户成功；重复手机号返回 409；跟进记录重复提交同一幂等键返回同一条；材料上传解析抽齐关键字段且原件可下载；人工复核确认 / 推翻均正确回写；批量研判按批号回捞、单条失败被隔离、超上限被拒</td></tr>
+        <tr><td>学员域</td><td>13</td><td>越权读他人档案返回 403；请假申请经审批后由 <code>PENDING</code> 流转为 <code>APPROVED</code>；<strong>重复审批返回 409</strong>；工单创建与关闭；心理预警管理层可读、普通员工被拒</td></tr>
+        <tr><td>运营域</td><td>9</td><td>活动创建与报名；报告经 Dify 工作流生成后可下载（响应头含 <code>attachment</code>）；日报提交与汇总；知识文档登记</td></tr>
+        <tr><td>组织架构与新人指引</td><td>17</td><td>组织架构树按汇报线成树；部门概览与花名册关键字检索；员工详情含汇报关系；入职指引五阶段齐全且每项都有负责人与入口；FAQ 整句提问可召回；组织信息对学生返回 403</td></tr>
+        <tr><td>主动待办与预警触达</td><td>25</td><td>四类业务待办 + 主动询问话术 + 不含敏感类；管理层待办 ⊇ 员工待办；推送落库并命中同时间窗频控；标记已处理幂等；预警触达幂等且重复不重写；待办与预警对访客返回 403</td></tr>
+        <tr><td>智能报告</td><td>22</td><td>五类报告口径齐全；逐类生成并断言报告期 + 指标 + 结论来自真实聚合；四种导出格式（xlsx / pdf / print / md）均返回正确字节；未知类型与不支持格式被 400 拒绝；导出限管理层；定时生成幂等只跳过不重复</td></tr>
+        <tr><td>数据能力</td><td>7</td><td>NL2SQL 命中 <code>lead_status_stats</code> 模板并返回预览 SQL；人名参数正确注入；<strong>越权查敏感模板返回 403</strong>；审计日志管理层可读、员工被拒</td></tr>
+        <tr><td>内部工具</td><td>6</td><td>工具清单可读（返回 26 个工具与角色覆盖矩阵）；4 个代表性工具在正确签名下调用成功；<strong>伪造签名返回 403</strong></td></tr>
+      </tbody>
+    </table>
+    <p><strong>测试中发现并修复的问题。</strong> 首次运行冒烟测试时有 1 条用例失败：<code>/openapi.json</code> 被判定为失败。排查后确认这是<strong>测试脚本自身的断言缺陷</strong>而非应用缺陷——OpenAPI 规范文档不是业务响应，本就不含统一响应体的 <code>code</code> 字段，而脚本却断言 <code>code == 0</code>。修正为仅校验 HTTP 200 后，149 条用例全部通过。</p>
+    <h3>（三）开发阶段修复的缺陷记录</h3>
+    <p>除上述测试脚本问题外，开发过程中通过测试与联调暴露并修复了 7 个真实缺陷，记录如下，供后续维护参考：</p>
+    <table>
+      <caption>表 8-3　开发阶段缺陷修复记录</caption>
+      <thead>
+        <tr><th>编号</th><th>现象</th><th>根因</th><th>修复方式</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>访客令牌访问接口返回 401"账号不存在"</td><td><code>get_principal</code> 对匿名访客也执行了 <code>sys_account</code> 查库，但访客并无账号记录</td><td>检测到令牌中 <code>anonymous</code> 为真时，直接由令牌声明构造主体，不查库</td></tr>
+        <tr><td>2</td><td>重复手机号返回 <code>40000</code> 而非 <code>40900</code></td><td><code>create_lead</code> 使用了通用异常并手工指定 HTTP 409，未走冲突异常</td><td>改为抛出语义化的 <code>Conflict</code> 异常</td></tr>
+        <tr><td>3</td><td>已停用账号登录返回 <code>40000</code> 而非 <code>40300</code></td><td><code>auth/token</code> 同样使用了通用异常</td><td>改为抛出 <code>Forbidden</code> 异常</td></tr>
+        <tr><td>4</td><td>合法列名 <code>created_at</code> 被 NL2SQL 拦截</td><td>危险关键字以普通子串方式匹配，<code>create</code> 命中了 <code>created_at</code></td><td>结构性关键字改为词边界正则匹配，与子串类规则分离</td></tr>
+        <tr><td>5</td><td>学员在自己的会话里查询成绩返回 403"权限不足"</td><td>早期为顾问与管理层编写的只读工具，角色门槛是 <code>employee</code> 且查询参数可选（不传即跨对象返回）；学员角色等级更低，被工具级门槛拦下</td><td><strong>不放宽原有工具的门槛</strong>（放宽等于允许跨学员查询），另开一个"只能查本人"的同款工具：强制要求传入本人标识、门槛对齐学员角色，并补一条回归测试锁住两者的分工</td></tr>
+        <tr><td>6</td><td>换一类问题后，回复变成一段与提问无关的通用套话</td><td>编排平台的会话标识<strong>按应用隔离</strong>；问题在应用间切换时把上一个应用的会话标识递过去，平台以"会话不存在"拒绝，该异常被笼统的降级逻辑接走，用户拿到兜底话术，界面上只留一个不显眼的降级标记</td><td>改为<strong>定向重试</strong>：仅在响应码为 400/404 且响应体命中"会话不存在"特征时丢弃会话标识重开一次；其余错误（5xx、鉴权失败、连接异常）仍照常降级且只调用一次，并补回归测试锁住这条边界</td></tr>
+        <tr><td>7</td><td>编排画布上节点渲染成一排空白细条、点不进去，右侧检查清单误报"缺少回复节点"</td><td>用接口建图时，把节点业务种类同时写到了节点的<strong>顶层 <code>type</code></strong>；画布给图形引擎只注册了一个节点组件，业务种类应只放在节点数据里，顶层写了别的值会导致组件查找失败、退化为内置空节点</td><td>顶层 <code>type</code> 统一按画布约定值写入，业务种类只保留在节点数据中；同步补一条建图自检（整改前 4 个工作流图全部命中）</td></tr>
+      </tbody>
+    </table>
+    <p>缺陷 1、2、3 反映的是同一类问题：<strong>异常语义与错误码的映射必须由专用异常类型承载，而不是靠调用处手工指定 HTTP 状态码</strong>。已统一为按异常类型映射错误码。缺陷 4 则说明安全过滤规则的精度与覆盖面同样重要——过宽的规则会误伤正常功能，过窄则留有缺口。缺陷 5 是权限设计中"<strong>宁可新开一个窄口子，也不放宽原有的宽口子</strong>"的一次具体实践。缺陷 6 与 7 同属"<strong>把上游的异常当成普通故障一并兜底</strong>"造成的静默失败：前者让用户拿到与问题无关的答案，后者让交付物的编辑入口直接不可用。两者都指向同一条经验——降级与容错必须按错误语义分类处理，平台侧的结构约定要当作契约对待；同时这两类问题的共同特征是<strong>不影响接口返回、不容易被自动化测试发现</strong>，因此需要专门的正向/负向用例来锁住。</p>
+    <h3>（四）验收结论</h3>
+    <table>
+      <caption>表 8-4　验收结论</caption>
+      <thead>
+        <tr><th>验收项</th><th>标准</th><th>实测</th><th>结论</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>单元/集成测试</td><td>全部通过</td><td>472 / 472 通过</td><td>通过</td></tr>
+        <tr><td>代码覆盖率</td><td>≥ 80%</td><td>91%</td><td>通过</td></tr>
+        <tr><td>端到端冒烟测试</td><td>全部通过</td><td>149 / 149 通过</td><td>通过</td></tr>
+        <tr><td>前端端到端（真浏览器）</td><td>全部通过</td><td>37 / 37 通过，0 页面异常</td><td>通过</td></tr>
+        <tr><td>权限隔离</td><td>越权访问被拒</td><td>全部越权/负向用例均按预期拒绝</td><td>通过</td></tr>
+        <tr><td>幂等性</td><td>重复提交不产生重复数据</td><td>跟进记录、请假审批、待办推送、预警触达、定时报告均验证通过</td><td>通过</td></tr>
+        <tr><td>内部工具鉴权</td><td>伪造签名被拒</td><td>返回 403</td><td>通过</td></tr>
+        <tr><td>双数据库兼容</td><td>SQLite 与 MySQL 均可运行</td><td>SQLite 已实测；MySQL 通过方言适配与容器编排支持</td><td>通过（MySQL 建议预发复验）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="chapter" id="section-9">
+    <h2>九、已知限制与后续演进</h2>
+    <h3>（一）已知限制</h3>
+    <ol><li><strong>Dify <code>live</code> 模式已打通，但尚未纳入自动化回归。</strong> 本机已部署真实 Dify 实例，完成 7 个应用的接线与逐分支联调，并针对跨应用会话、跨角色越权、知识库命中三类场景做了实测；但该分支依赖外部实例与云端模型服务，未进入日常测试链路。日常回归仍由 mock 分支保证可测性（472 条用例全部离线通过）。建议在预发环境把它做成定期集成验证。</li><li><strong>NL2SQL 的模板式方案覆盖面有限。</strong> 当前仅支持 8 类预置查询，超出范围的提问无法应答。这是安全性与灵活性的主动取舍——若后续需要扩展，建议以"新增模板"而非"开放自由生成"的方式演进。</li><li><strong>ASR 采用规则抽取槽位。</strong> 轻量正则对句式变化敏感，复杂表达可能抽取不全。若实际使用中召回不足，应切换到模型抽取方案。</li><li><strong>无数据库迁移版本管理。</strong> 当前依赖 ORM 元数据自动建表，字段变更需人工处理。生产环境建议尽早引入 Alembic。</li><li><strong>未接入限流与熔断。</strong> 当前仅有超时与重试，缺少按用户/IP 的限流与上游熔断保护。</li></ol>
+    <h3>（二）后续演进建议</h3>
+    <ol><li>引入 Alembic 管理数据库迁移，消除字段变更风险。</li><li>为 <code>/api/v1/chat/*</code> 与 <code>/api/v1/nl2sql/query</code> 增加限流，防止资源滥用。</li><li>在预发环境建立 <code>DIFY_MODE=live</code> 的定期集成验证，把上方限制 1 的缺口补上。</li><li>将 ASR 槽位抽取从规则升级为模型抽取，提升自然表达的召回。</li><li>基于 <code>audit_log</code> 建立运营看板，把审计数据转化为可用洞察。</li></ol>
+  </div>
+  <div class="chapter" id="appendix-a">
+    <h2>附录 A：部署速查</h2>
+    <pre># 1. 安装依赖
+pip install -r requirements.txt
+
+# 2. 准备配置
+cp .env.example .env
+
+# 3. 初始化种子数据（幂等）
+python scripts/seed.py
+
+# 4. 启动服务（推荐用一键启动器，默认 8010 / 8020）
+python scripts/launcher.py --headless --no-browser
+#   或手工起：uvicorn app.main:app --host 0.0.0.0 --port 8010
+
+# 5. 运行测试
+pytest -q --cov=app                       # 单元/集成测试
+python scripts/smoke_test.py              # 冒烟测试（--base 默认自动发现端口）
+
+# 6. MySQL + Docker 部署
+pip install -r requirements-mysql.txt
+docker compose up -d --build</pre>
+  </div>
+  <div class="chapter" id="appendix-b">
+    <h2>附录 B：核心参数速查</h2>
+    <table>
+      <caption>表 B-1　核心参数速查</caption>
+      <thead>
+        <tr><th>参数</th><th>取值</th><th>位置</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>接口总数</td><td>91 个操作 / 82 条路径（10 个功能组）</td><td><code>/openapi.json</code></td></tr>
+        <tr><td>数据表总数</td><td>19 张（18 业务 + 1 系统账号）</td><td><code>app/models.py</code></td></tr>
+        <tr><td>Dify 应用数</td><td>7 个（4 对话 + 3 工作流，学员助手为 Chatflow）</td><td><code>app/services/dify.py</code></td></tr>
+        <tr><td>模型接入</td><td>对话模型走云端大模型；知识库嵌入走智谱 <code>embedding-3</code>（2048 维）；语音识别走 mock</td><td>编排平台模型配置（无本地模型依赖）</td></tr>
+        <tr><td>受控 SQL 模板数</td><td>8 个</td><td><code>app/services/nl2sql.py</code></td></tr>
+        <tr><td>内部工具数</td><td>26 个（只读 12 / 写入 14）</td><td><code>app/services/agent_tools.py</code></td></tr>
+        <tr><td>角色数</td><td>5 个（visitor / student / employee / manager / admin）</td><td><code>app/api/deps.py</code></td></tr>
+        <tr><td>错误码数</td><td>8 个（含成功码 0）</td><td><code>app/core.py</code></td></tr>
+        <tr><td>报告口径数</td><td>5 类（customer_ops / daily_digest / weekly_digest / mental_weekly / complaint_weekly）</td><td><code>app/services/reports.py</code></td></tr>
+        <tr><td>报告导出格式</td><td>4 种（xlsx / pdf / print / md）</td><td><code>app/services/reports.py</code></td></tr>
+        <tr><td>待办类别数</td><td>5 类（approval / ticket / followup / screening_review / mental_alert）</td><td><code>app/services/todo.py</code></td></tr>
+        <tr><td>单元测试</td><td>472 条，覆盖率 91%</td><td><code>tests/</code></td></tr>
+        <tr><td>冒烟测试</td><td>149 条，全部通过</td><td><code>scripts/smoke_test.py</code></td></tr>
+        <tr><td>前端 E2E</td><td>37 条，全部通过</td><td><code>scripts/frontend_e2e.mjs</code></td></tr>
+        <tr><td>环境变量</td><td>34 项</td><td><code>app/config.py</code></td></tr>
+        <tr><td>令牌有效期</td><td>120 分钟</td><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td></tr>
+        <tr><td>内部工具签名时效</td><td>300 秒</td><td><code>app/core.py</code></td></tr>
+        <tr><td>受控查询行数上限</td><td>50 行</td><td><code>NL2SQL_MAX_ROWS</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+</body>
+</html>

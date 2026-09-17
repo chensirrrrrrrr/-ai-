@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: uas-mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pwd_change_me
+      MYSQL_DATABASE: ai_assistant
+      MYSQL_USER: uas
+      MYSQL_PASSWORD: uas_pwd_change_me
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot_pwd_change_me"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: uas-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://uas:uas_pwd_change_me@mysql:3306/ai_assistant?charset=utf8mb4
+      SECRET_KEY: change-this-in-production-0123456789abcdef
+      TOOL_SHARED_SECRET: change-this-too-in-production-0123456789
+      DIFY_MODE: mock
+      DIFY_BASE_URL: http://dify:5001/v1
+      ASR_PROVIDER: mock
+      DEBUG: "false"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
