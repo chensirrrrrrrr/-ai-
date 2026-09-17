@@ -40,7 +40,7 @@ from ..config import settings
 from ..core import AppError, Forbidden, NotFound
 from ..models import (Activity, ActivityEnrollment, AfterSalesTicket, CustomerFollowup,
                       CustomerLead, Employee, EmployeeReport, LeadScreening,
-                      PendingAction, Student, StudentRequest)
+                      PendingAction, Student, StudentRequest, SysAccount)
 from . import deadline, material, notify, onboarding, reports, rules, todo
 from . import crypto
 from .nl2sql import run_query
@@ -102,10 +102,40 @@ class ToolSpec:
 # --------------------------------------------------------------------------- #
 # read 工具
 # --------------------------------------------------------------------------- #
+def _operator_employee_id(db: Session, ctx: ToolContext) -> Optional[int]:
+    """工具调用方（`actor_subject` = sys_account.username）对应的员工 ID。
+
+    拿不到就说明「不知道这是谁」——此时宁可什么都不返回，也绝不能退回全库，
+    否则行级收敛就成了摆设（HTTP 侧 `_visible_lead` 也是同一条口径）。
+    """
+    account = db.query(SysAccount).filter(SysAccount.username == ctx.actor_subject).first()
+    if account is None or not account.is_active or account.ref_id is None:
+        return None
+    if account.role not in ("employee", "manager", "admin"):
+        return None
+    return account.ref_id
+
+
 def _lead_query(db: Session, params: Dict[str, Any], ctx: ToolContext) -> Dict[str, Any]:
-    """按关键字 / 状态 / 归属查意向客户，带最近跟进。"""
+    """按关键字 / 状态 / 归属查意向客户，带最近跟进。
+
+    行级收敛（方案 A）：**employee 只查自己名下的客户**，与 HTTP 侧 `_visible_lead`
+    保持同一口径 —— 拿到合法 HMAC 的顾问会话，不能再靠助手翻到同事的客户。
+    manager / admin 不受限制；身份无法确认时返回空并给出明确提示（fail closed）。
+    """
     keyword = (params.get("keyword") or params.get("name") or "").strip()
     query = db.query(CustomerLead)
+    scope = "all"
+    if ctx.rank < ROLE_RANK["manager"]:
+        employee_id = _operator_employee_id(db, ctx)
+        if employee_id is None:
+            logger.warning("lead_query 无法确认操作人身份（actor=%s role=%s），返回空结果",
+                           ctx.actor_subject, ctx.actor_role)
+            return {"count": 0, "leads": [], "scope": "unknown_operator",
+                    "hint": ("无法确认操作人身份：员工角色调用请在请求体里带上登录账号名"
+                             "（actor），否则查不到任何客户；跨客户查询请由管理者会话发起。")}
+        query = query.filter(CustomerLead.owner_id == employee_id)
+        scope = "own"
     if keyword:
         like = f"%{keyword}%"
         conds = [CustomerLead.name.like(like), CustomerLead.phone.like(like)]
@@ -143,7 +173,7 @@ def _lead_query(db: Session, params: Dict[str, Any], ctx: ToolContext) -> Dict[s
                                   "at": f.created_at.strftime("%Y-%m-%d %H:%M")}
                                  for f in followups],
         })
-    return {"count": len(out), "leads": out}
+    return {"count": len(out), "leads": out, "scope": scope}
 
 
 def _student_scores(db: Session, params: Dict[str, Any], ctx: ToolContext) -> Dict[str, Any]:

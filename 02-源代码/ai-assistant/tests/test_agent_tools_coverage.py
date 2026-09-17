@@ -490,3 +490,67 @@ def test_effective_status_and_catalog(db, ctx):
 
     coverage = agent_tools.tdd_coverage()
     assert coverage["missing"] == [] and coverage["implemented"] == 19
+
+
+def test_lead_query_row_level_scope_for_employee(db):
+    """方案 A：employee 会话只能查自己名下的客户；manager 全量；身份不可确认 → 空。
+
+    补这条的背景：HTTP 侧已做行级隔离（`crm._visible_lead`），但 Dify 工具链路
+    `lead_query` 对 employee 仍可查全库 —— 两条入口的口径必须一致。
+    """
+    handler = agent_tools.TOOL_REGISTRY["lead_query"].handler
+    mine = db.query(Employee).first()
+    other = db.query(Employee).filter(Employee.id != mine.id).first()
+    suffix = uuid.uuid4().hex[:6]
+
+    own_phone = "137" + suffix[:8]
+    foreign_phone = "136" + suffix[:8]
+    own = CustomerLead(name=f"我方客户{suffix}", phone=own_phone, status="NEW",
+                       owner_id=mine.id)
+    foreign = CustomerLead(name=f"他人客户{suffix}", phone=foreign_phone, status="NEW",
+                           owner_id=other.id)
+    db.add_all([own, foreign])
+    db.flush()
+
+    employee = agent_tools.ToolContext(actor_subject="advisor", actor_role="employee")
+    manager = agent_tools.ToolContext(actor_subject="manager", actor_role="manager")
+
+    # employee：同名前缀只命中自己那条；显式指定别人的 owner 也翻不出去
+    out = handler(db, {"keyword": f"客户{suffix}"}, employee)
+    assert out["scope"] == "own"
+    assert [x["id"] for x in out["leads"]] == [own.id]
+    assert handler(db, {"owner": other.name}, employee)["count"] == 0
+    assert handler(db, {"phone": foreign_phone}, employee)["count"] == 0
+
+    # manager：全量
+    out_all = handler(db, {"keyword": f"客户{suffix}"}, manager)
+    assert out_all["scope"] == "all" and out_all["count"] == 2
+
+    # 身份不可确认（actor 不是登录账号名）→ fail closed，空结果 + 提示
+    unknown = handler(db, {"keyword": f"客户{suffix}"},
+                      agent_tools.ToolContext(actor_subject="dify", actor_role="employee"))
+    assert unknown["count"] == 0 and unknown["scope"] == "unknown_operator"
+    assert "actor" in unknown["hint"]
+
+
+def test_operator_employee_id_resolution(db):
+    """身份解析：账号名 → 员工 ID；停用 / 非员工 / 不存在的账号一律拿不到。"""
+    from app.models import SysAccount
+
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="advisor")) == 1
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="dify")) is None
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="no-such-account")) is None
+    # 学生账号也有 ref_id（指向 student），但不是员工 —— 不能拿来当客户归属
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="student")) is None
+
+    account = db.query(SysAccount).filter(SysAccount.username == "teacher").first()
+    account.is_active = False
+    db.flush()
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="teacher")) is None
+    account.is_active = True
+    db.flush()

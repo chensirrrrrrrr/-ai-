@@ -30,6 +30,16 @@ def _post_as(client, name: str, params: dict, role: str):
                                 "x-tool-signature": sign_tool_payload(body, timestamp)})
 
 
+def _post_actor(client, name: str, params: dict, actor: str):
+    """带 `actor`（登录账号名）的签名调用 —— 行级收敛后员工查数据靠它确认身份。"""
+    body = json.dumps({"params": params, "actor": actor}, ensure_ascii=False).encode("utf-8")
+    timestamp = str(time.time())
+    return client.post(f"/internal/tools/{name}", content=body,
+                       headers={"content-type": "application/json",
+                                "x-tool-timestamp": timestamp,
+                                "x-tool-signature": sign_tool_payload(body, timestamp)})
+
+
 def test_tool_catalog(client):
     body = data(client.get("/internal/tools"))
     names = {item["name"] for item in body["items"]}
@@ -56,10 +66,25 @@ def test_tool_rejects_stale_timestamp(client):
 
 
 def test_tool_lead_lookup(client):
-    body = data(_post(client, "lead_lookup", {"name": "赵六"}))
-    assert body["count"] >= 1
+    """行级收敛后：员工角色的工具调用必须带上登录账号名（actor），否则查不到任何客户。"""
+    # 不带 actor（Dify 默认 "dify"）→ 身份无法确认 → 空结果 + 明确提示，绝不全库返回
+    anonymous = data(_post(client, "lead_lookup", {"name": "赵六"}))
+    assert anonymous["count"] == 0 and anonymous["scope"] == "unknown_operator"
+    assert "actor" in anonymous["hint"]
+
+    # 带上操作人：advisor（员工 id=1）能看到自己名下的赵六
+    body = data(_post_actor(client, "lead_lookup", {"name": "赵六"}, "advisor"))
+    assert body["count"] >= 1 and body["scope"] == "own"
     assert body["leads"][0]["name"] == "赵六"
     assert body["leads"][0]["recent_followups"]
+
+    # 换成另一个员工（teacher，员工 id=2）：赵六不在其名下
+    other = data(_post_actor(client, "lead_lookup", {"name": "赵六"}, "teacher"))
+    assert other["count"] == 0 and other["scope"] == "own"
+
+    # manager 会话全量可见（不依赖 actor）
+    mgr = data(_post_as(client, "lead_lookup", {"name": "赵六"}, "manager"))
+    assert mgr["count"] >= 1 and mgr["scope"] == "all"
 
 
 def test_tool_student_scores(client):
@@ -205,10 +230,13 @@ STATIC_KEY = "test-dify-tool-key-0123456789"
 _TOOL_BODY = json.dumps({"params": {"name": "赵六"}}, ensure_ascii=False).encode("utf-8")
 
 
-def _post_bearer(client, name: str, token: str | None, role: str | None = None):
+def _post_bearer(client, name: str, token: str | None, role: str | None = None,
+                 actor: str | None = None):
     payload = {"params": {"name": "赵六"}}
     if role:
         payload["role"] = role
+    if actor:
+        payload["actor"] = actor
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     headers = {"content-type": "application/json"}
     if token is not None:
@@ -229,7 +257,8 @@ def test_static_key_channel_off_when_not_configured(client, monkeypatch):
 
 def test_static_key_accepts_correct_token(client, monkeypatch):
     monkeypatch.setattr(settings, "dify_tool_key", STATIC_KEY)
-    body = data(_post_bearer(client, "lead_lookup", STATIC_KEY))
+    # 带上 actor：员工角色的 lead_query 需要它确认「查谁的客户」
+    body = data(_post_bearer(client, "lead_lookup", STATIC_KEY, actor="advisor"))
     assert body["count"] >= 1
     assert body["leads"][0]["name"] == "赵六"
 
@@ -285,5 +314,5 @@ def test_static_key_still_enforces_role(client, monkeypatch):
 def test_hmac_still_works_alongside_static_key(client, monkeypatch):
     """两条路并存：静态 Key 开着也不影响原有 HMAC 调用。"""
     monkeypatch.setattr(settings, "dify_tool_key", STATIC_KEY)
-    body = data(_post(client, "lead_lookup", {"name": "赵六"}))
+    body = data(_post_actor(client, "lead_lookup", {"name": "赵六"}, "advisor"))
     assert body["count"] >= 1
