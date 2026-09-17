@@ -193,6 +193,27 @@
 报告 / 筛选 / 路由分发各 3 节点），回读校验 `top-level type = {custom:18}`、`data.type` 原样、
 prompt / model / 变量引用 / 分类器 6 类全部完好。
 
+### 2.6 Dify 控制台 API 与工具链路身份（本次新增要点）
+
+**控制台 API（`/console/api/*`）的三条硬规矩**：
+
+- 🔴 **读写都要带 `X-CSRF-Token`**，值 = 登录后种下的 `csrf_token` cookie（只有写操作需要是误区，实测 GET 也会 401）
+- 127.0.0.1 **必须禁代理**（`urllib` 用 `ProxyHandler({})`、`httpx` 用 `trust_env=False`）
+- 只有 `workflow` / `advanced-chat` 有草稿图；普通 `chat` 应用取 `workflows/draft` 会
+  `404 App mode is not in the supported list` —— 盘点时按「不适用」跳过，别当失败
+
+**工具链路的身份传递**（行级收敛之后的配套）：
+
+- 工具一律走 **HTTP 请求节点**，body 里硬写 `"actor": "{{#sys.user_id#}}"`；
+  **不要走「自定义工具（OpenAPI）」** —— 那条路身份只能靠 LLM 填参数，不可靠
+- `sys.user_id` 形如 `uas-advisor`（`dify_user_prefix` + 登录账号名），后端
+  `_operator_employee_id()` 会自动剥前缀查账号，Dify 侧无需做字符串处理
+- 规范由 `scripts/check_dify_tool_actor.py` 守：调 `lead_query` / `lead_lookup`
+  却没带 `actor` → 判红（退出码 1）；凭据只读环境变量，未配置则跳过（退出码 2）
+- **实测结论**：现有 9 个应用里只有「学生助手 Chatflow」调工具，且是
+  `my_scores` / `my_requests` / `my_tickets` 三个学生视角只读工具，
+  **没有任何节点调 `lead_query`** ⇒ 行级收敛对当前 live 链路零影响
+
 ---
 
 ### 2.6 `dify-kb-embedding-switch` —— Dify 知识库嵌入模型原地切换
