@@ -174,7 +174,28 @@ strong{font-weight:600}
 <ol><li><code>python scripts/check_dify.py</code> —— 先探活；若容器掉了（今晚曾发生），把 <code>.env</code> 的 <code>DIFY_MODE=live</code> 改成 <code>mock</code> 并重启即可继续演示。</li><li>重新登录一次 —— 密钥已轮换，<strong>旧 Token 立即失效</strong>（JWT 无状态），不是故障。</li><li>一键复现证据用 <code>python scripts/regression.py</code>（约 100s），不要后台挂起 launcher（stdout 管道不收口会假死）。</li><li>演示口径：本系统处理耗时是毫秒级（压测 p95 27 ms），真实模型耗时是秒级，两个数分开讲。</li></ol>
 <hr>
 <h2>九、验收签署建议</h2>
-<ul><li><strong>交付 / 结题验收</strong>：建议<strong>通过</strong>，附本报告的实测基线与四条一键复现命令作为证据链。</li><li><strong>生产上线</strong>：建议<strong>有条件通过</strong> —— 关闭 R1 / R2 / R3 / R5 后再走上线评审；R6–R10 应在上线方案中明确责任人与时间点。</li><li><strong>后续动作</strong>：将 R1–R15 逐条建为项目事项并分配责任人；本验收结论上传项目资料库归档。</li></ul>
+<ul><li><strong>交付 / 结题验收</strong>：建议<strong>通过</strong>，附本报告的实测基线与四条一键复现命令作为证据链。</li><li><strong>生产上线</strong>：建议<strong>有条件通过</strong> —— 关闭 R1 / R2 / R3 / R5 后再走上线评审；R6–R10 应在上线方案中明确责任人与时间点。</li><li><strong>后续动作</strong>：本验收结论上传项目资料库归档。</li></ul>
+<h3>遗留问题事项清单（2026-09-17 已建，指派：又肥了三金）</h3>
+<table>
+<thead><tr><th>编号</th><th>事项 ID</th><th>优先级</th></tr></thead>
+<tbody>
+<tr><td>R1 甲方研判规则文件</td><td><code>rPQBSZ</code></td><td>urgent</td></tr>
+<tr><td>R2 26 工具 Dify 侧联调</td><td><code>rEAHCI</code></td><td>urgent</td></tr>
+<tr><td>R3 真实触达通道</td><td><code>rm60Au</code></td><td>urgent</td></tr>
+<tr><td>R4 标注样本集与准确率实测</td><td><code>rMdBlp</code></td><td>urgent</td></tr>
+<tr><td>R5 渗透测试</td><td><code>rVlrX9</code></td><td>urgent</td></tr>
+<tr><td>R6 HTTPS / TLS 终止</td><td><code>rNpnhV</code></td><td>high</td></tr>
+<tr><td>R7 开启字段加密并回填</td><td><code>rWe7Ph</code></td><td>high</td></tr>
+<tr><td>R8 生产库换 MySQL</td><td><code>r8T7NJ</code></td><td>high</td></tr>
+<tr><td>R9 限流与指标换 Redis</td><td><code>raX6ht</code></td><td>high</td></tr>
+<tr><td>R10 live 模式并发压测</td><td><code>rJPr2b</code></td><td>high</td></tr>
+<tr><td>R11 教务系统数据源</td><td><code>ri4YxJ</code></td><td>medium</td></tr>
+<tr><td>R12 CRM / 申请系统对接</td><td><code>rwkkTW</code></td><td>medium</td></tr>
+<tr><td>R13 知识库换甲方正式文档</td><td><code>rSofNt</code></td><td>medium</td></tr>
+<tr><td>R14 ASR 真实 provider</td><td><code>r2XuQm</code></td><td>medium</td></tr>
+<tr><td>R15 环境划分与 K8s 决策</td><td><code>rf5nsj</code></td><td>low</td></tr>
+<tr><td>O1 E2E 报告 md/json 不同步</td><td><code>rnXldA</code></td><td>low</td></tr>
+</tbody></table>
 </main>
 </body>
 </html>
