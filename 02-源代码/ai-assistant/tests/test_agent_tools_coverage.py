@@ -546,6 +546,11 @@ def test_operator_employee_id_resolution(db):
     # 学生账号也有 ref_id（指向 student），但不是员工 —— 不能拿来当客户归属
     assert agent_tools._operator_employee_id(
         db, agent_tools.ToolContext(actor_subject="student")) is None
+    # Dify 侧带过来的是 `sys.user_id`（形如 uas-advisor），前缀要能自动剥掉
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="uas-advisor")) == 1
+    assert agent_tools._operator_employee_id(
+        db, agent_tools.ToolContext(actor_subject="uas-manager")) == 3
 
     account = db.query(SysAccount).filter(SysAccount.username == "teacher").first()
     account.is_active = False

@@ -108,7 +108,13 @@ def _operator_employee_id(db: Session, ctx: ToolContext) -> Optional[int]:
     拿不到就说明「不知道这是谁」——此时宁可什么都不返回，也绝不能退回全库，
     否则行级收敛就成了摆设（HTTP 侧 `_visible_lead` 也是同一条口径）。
     """
-    account = db.query(SysAccount).filter(SysAccount.username == ctx.actor_subject).first()
+    subject = (ctx.actor_subject or "").strip()
+    # Dify 侧的会话用户是 `uas-<登录账号名>`（`dify_user_prefix` + 账号名），
+    # 工具节点直接把 `sys.user_id` 带过来时在这里剥掉前缀。
+    prefix = f"{settings.dify_user_prefix}-"
+    if settings.dify_user_prefix and subject.startswith(prefix):
+        subject = subject[len(prefix):]
+    account = db.query(SysAccount).filter(SysAccount.username == subject).first()
     if account is None or not account.is_active or account.ref_id is None:
         return None
     if account.role not in ("employee", "manager", "admin"):
