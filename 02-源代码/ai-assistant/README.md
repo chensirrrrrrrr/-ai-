@@ -263,13 +263,21 @@ DATABASE_URL=mysql+pymysql://uas:pwd@127.0.0.1:3306/ai_assistant?charset=utf8mb4
 ## 五、测试
 
 ```bash
-pytest -q                                              # 全部用例（320 项）
+pytest -q                                              # 全部用例
 pytest --cov=app --cov-report=term-missing             # 带覆盖率
 
 python scripts/launcher.py --selfcheck                 # 真起服 → 13 项体检 → 收服
 python scripts/launcher.py --smoke                     # 启动后跑 149 项冒烟测试
 python scripts/launcher.py --dify-check                # Dify 接线探活（切 live 前必跑）
+
+python scripts/regression.py                           # 一键全量回归（上面三层的串起来）
+python scripts/load_test.py --base http://127.0.0.1:8010    # 并发压测（出 p50/p95/吞吐）
+python scripts/check_prod_config.py                    # 生产配置守卫（默认密钥/debug/限流…）
+python scripts/check_dify_tool_actor.py                # Dify 工具节点是否带了操作人身份
 ```
+
+CI：仓库根目录 `.github/workflows/ci.yml`，push / PR 自动跑
+「pytest + 前端 import 检查」→「`launcher --selfcheck` 起服冒烟」两个 job。
 
 测试用独立的 SQLite 文件库，session 级建表 + 灌种子数据，跑完自动清理；
 `DIFY_MODE=mock`，不依赖任何外部服务。

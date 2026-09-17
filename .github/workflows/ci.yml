@@ -1,0 +1,87 @@
+# 留学机构 AI 助手系统 · CI
+#
+# 分两个 job，与本地一键回归的口径一致：
+#   unit   —— pytest（含覆盖率），离线可跑，不需要 Dify / 浏览器
+#   smoke  —— `scripts/launcher.py --selfcheck`：起服 → 体检 → HTTP 冒烟（149 项）
+#
+# 说明两点设计取舍：
+# 1. 冒烟 job **不跑浏览器 E2E**（`--e2e`）：CI 里装 Edge/Chromium 收益低、稳定性差，
+#    浏览器链路留在本地按需跑（本机一键回归默认带）。
+# 2. 冒烟 job 不依赖真实 Dify：runner 上没有 .env，`launcher` 会自动生成一份默认配置
+#    （`DIFY_MODE=mock`），走本地编排层 —— 这正是「离线可测」这条设计带来的红利。
+name: CI
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: 单元 / 集成（pytest）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: 02-源代码/ai-assistant/requirements.txt
+
+      - name: 安装依赖
+        working-directory: 02-源代码/ai-assistant
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 跑测试（含覆盖率）
+        working-directory: 02-源代码/ai-assistant
+        env:
+          # conftest 会自己准备测试库与 mock 环境变量，这里只保证密钥长度合法
+          SECRET_KEY: ci-only-secret-key-0123456789abcdefghij
+        run: python -m pytest --cov=app --cov-report=term-missing
+
+      - name: 前端 import 一致性
+        working-directory: 02-源代码/ai-assistant
+        run: python scripts/check_frontend_imports.py
+
+  smoke:
+    name: 起服体检 + HTTP 冒烟
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: unit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: 02-源代码/ai-assistant/requirements.txt
+
+      - name: 安装依赖
+        working-directory: 02-源代码/ai-assistant
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 一键自检（起服 → 体检 → 冒烟）
+        working-directory: 02-源代码/ai-assistant
+        env:
+          SECRET_KEY: ci-only-secret-key-0123456789abcdefghij
+        run: python scripts/launcher.py --selfcheck
+
+      - name: 冒烟报告（失败时也留档）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: 02-源代码/ai-assistant/reports/smoke_report.md
+          if-no-files-found: ignore
